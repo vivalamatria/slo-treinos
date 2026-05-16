@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#dd942d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SLO">
+<link rel="apple-touch-icon" href="app_icon@2x.png">
+<link rel="icon" type="image/png" href="app_icon@2x.png">
+<title>SLO</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --amber:#dd942d;
+  --amber-dark:#b87824;
+  --amber-light:#fdf0dc;
+  --amber-muted:#f0b860;
+  --ink:#0F172A;
+  --ink-2:#334155;
+  --ink-3:#64748B;
+  --ink-4:#94A3B8;
+  --line:#E2E8F0;
+  --surface:#F8FAFC;
+  --white:#FFFFFF;
+  --red:#EF4444;
+  --green:#10B981;
+  --blue:#3B82F6;
+  --r:12px;
+  --r-sm:8px;
+  --r-lg:20px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --sh-lg:0 10px 30px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+  --t:200ms cubic-bezier(.4,0,.2,1);
+}
+
+html{height:100%;overflow:hidden}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;color:var(--ink);background:var(--surface);height:100%;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ─────────────────────────────────── */
+.hdr{flex:none;background:var(--white);border-bottom:1px solid var(--line);padding:0 20px;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));height:56px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:50}
+.hdr-logo{display:flex;align-items:center}
+.hdr-logo-img{height:40px;width:auto;display:block}
+.hdr-subtitle{font-size:12px;font-weight:500;color:var(--ink-3);letter-spacing:.02em;text-transform:uppercase}
+
+/* ── SCROLL AREA ─────────────────────────────── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── BOTTOM NAV ──────────────────────────────── */
+.nav{flex:none;background:var(--white);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 8px;border:none;background:none;color:var(--ink-4);cursor:pointer;transition:color var(--t);position:relative;min-height:56px}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;transition:stroke var(--t)}
+.nav-btn span{font-size:10px;font-weight:600;letter-spacing:.02em}
+.nav-btn.on{color:var(--amber)}
+.nav-btn.on::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:var(--amber);border-radius:2px 2px 0 0}
+
+/* ── SECTIONS ────────────────────────────────── */
+.sec{display:none;padding:20px max(20px,env(safe-area-inset-right)) 32px max(20px,env(safe-area-inset-left))}
+.sec.on{display:block;animation:rise .22s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sec-title{font-size:26px;font-weight:800;letter-spacing:-.04em;color:var(--ink)}
+.sec-title small{display:block;font-size:13px;font-weight:500;color:var(--ink-3);letter-spacing:0;margin-top:1px}
+
+/* ── BTN-ROUND ───────────────────────────────── */
+.btn-round{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--t),box-shadow var(--t)}
+.btn-round:active{transform:scale(.92)}
+.btn-round.primary{background:var(--amber);box-shadow:0 2px 8px rgba(245,158,11,.35)}
+.btn-round.primary svg{stroke:white;stroke-width:2.5;fill:none;width:20px;height:20px}
+
+/* ── CARDS ───────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--line);overflow:hidden}
+.card+.card{margin-top:12px}
+
+.card-pad{padding:16px}
+.card-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card-title{font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.card-sub{font-size:13px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+
+/* ── BADGE ───────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
+.badge.active{background:var(--amber-light);color:var(--amber-dark)}
+.badge.planned{background:#F1F5F9;color:var(--ink-3)}
+.badge.completed{background:#E0F2FE;color:#0369A1}
+
+/* ── DIVIDER ─────────────────────────────────── */
+.div{height:1px;background:var(--line);margin:0 -16px}
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;padding:10px 16px;transition:transform var(--t),box-shadow var(--t),background var(--t)}
+.btn:active{transform:scale(.97)}
+.btn.xl{padding:14px 20px;font-size:15px;border-radius:var(--r)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.btn.full{width:100%}
+.btn.primary{background:var(--amber);color:white;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+.btn.primary:active{background:var(--amber-dark);box-shadow:none}
+.btn.dark{background:var(--ink);color:white}
+.btn.ghost{background:var(--surface);color:var(--ink-2);border:1px solid var(--line)}
+.btn.ghost:active{background:var(--line)}
+.btn.danger{background:#FEF2F2;color:var(--red)}
+.btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.5;fill:none;flex-shrink:0}
+
+/* ── ICON BUTTONS ────────────────────────────── */
+.ibtn{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--t)}
+.ibtn:active{transform:scale(.88)}
+.ibtn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none}
+.ibtn.log{background:var(--white);color:var(--amber);border:2px solid var(--amber)}
+.ibtn.log.logged{background:var(--amber);color:white;border:2px solid var(--amber)}
+.ibtn.edit{background:var(--surface);color:var(--ink-3);border:1px solid var(--line)}
+.ibtn.del{background:#FEF2F2;color:var(--red)}
+
+/* ── CALENDAR ────────────────────────────────── */
+.cal{background:var(--white);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);overflow:hidden;margin-bottom:16px}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px}
+.cal-month-lbl{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.cal-nav{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-3);transition:background var(--t)}
+.cal-nav:active{background:var(--line)}
+.cal-nav svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px 14px;gap:3px}
+.cal-dow{font-size:9px;font-weight:700;color:var(--ink-4);text-align:center;padding:6px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink-4);border-radius:7px}
+.cal-day.in{color:var(--ink-3)}
+.cal-day.trained{background:var(--amber-light);color:var(--amber-dark);font-weight:700}
+.cal-day.today{background:var(--amber);color:white;font-weight:800}
+
+/* ── TODAY WIDGET ────────────────────────────── */
+.today-card{background:linear-gradient(135deg,var(--amber) 0%,var(--amber-dark) 100%);border-radius:var(--r);padding:20px;margin-bottom:20px;color:white;position:relative;overflow:hidden}
+.today-card::after{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)}
+.today-eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.today-name{font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
+.today-focus{font-size:13px;opacity:.85;margin-bottom:16px}
+.today-chip{display:inline-flex;align-items:center;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+
+/* ── QUICK IMPORT ────────────────────────────── */
+.import-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.import-btn{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color var(--t),box-shadow var(--t);text-align:left}
+.import-btn:active{transform:scale(.97)}
+.import-btn:hover{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.1)}
+.import-btn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:18px}
+.import-btn-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.import-btn-sub{font-size:11px;color:var(--ink-4)}
+
+/* ── FILTER BAR ──────────────────────────────── */
+.filter-wrap{margin-bottom:16px}
+.select{width:100%;padding:10px 14px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--ink);font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.select:focus{outline:none;border-color:var(--amber)}
+
+/* ── WORKOUT SECTION HEADER ──────────────────── */
+.wk-group{margin-bottom:16px}
+.wk-group-label{font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;padding:0 4px}
+
+/* ── WORKOUT CARD ────────────────────────────── */
+.wk-card{background:var(--white);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);overflow:hidden;margin-bottom:10px}
+.wk-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none}
+.wk-card-hdr:active{background:var(--surface)}
+.wk-card-info{}
+.wk-card-title{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.wk-card-meta{font-size:12px;color:var(--ink-4);margin-top:1px}
+.wk-card-toggle{width:28px;height:28px;border-radius:8px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:transform var(--t);flex-shrink:0}
+.wk-card-toggle svg{width:14px;height:14px;stroke:var(--ink-3);stroke-width:2.5;fill:none;transition:transform var(--t)}
+.wk-card.open .wk-card-toggle svg{transform:rotate(180deg)}
+.wk-card-body{display:none;border-top:1px solid var(--line)}
+.wk-card.open .wk-card-body{display:block}
+.ex-list{padding:8px}
+.ex-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 8px;border-radius:8px;transition:background var(--t)}
+.ex-item:hover{background:var(--surface)}
+.ex-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.ex-spec{font-size:11px;color:var(--ink-4);font-weight:500}
+.ex-note{font-size:11px;color:var(--ink-3);font-style:italic;margin-top:1px}
+.ex-actions{display:flex;gap:4px;flex-shrink:0}
+.wk-footer{padding:8px 16px 14px;display:flex;justify-content:flex-end}
+
+/* ── EMPTY STATE ─────────────────────────────── */
+.empty{text-align:center;padding:56px 24px;color:var(--ink-4)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:700;color:var(--ink-3);margin-bottom:4px}
+.empty-text{font-size:13px;line-height:1.6}
+
+/* ── PROGRESS CARDS ──────────────────────────── */
+.prog-card{background:var(--white);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:16px;margin-bottom:10px}
+.prog-name{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:12px}
+.prog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.prog-stat{}
+.prog-stat-lbl{font-size:10px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.prog-stat-val{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.03em}
+.prog-stat-val.up{color:var(--green)}
+.prog-stat-val.neutral{color:var(--ink-3)}
+.prog-bar-wrap{margin-top:12px;height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-dark));border-radius:4px;transition:width .6s ease}
+.prog-sessions{font-size:11px;color:var(--ink-4);margin-top:6px}
+.prog-last{font-size:11px;color:var(--ink-3);margin-top:2px}
+
+/* ── PROFILE ─────────────────────────────────── */
+.prof-hero{background:linear-gradient(135deg,var(--ink) 0%,var(--ink-2) 100%);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;color:white}
+.prof-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px}
+.prof-name{font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
+.prof-tagline{font-size:13px;opacity:.6}
+.prof-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.prof-stat-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--sh)}
+.prof-stat-val{font-size:28px;font-weight:900;color:var(--amber);letter-spacing:-.04em;line-height:1}
+.prof-stat-lbl{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.prof-action-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.prof-action-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px}
+
+/* ── MODALS ──────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0);display:none;z-index:200;align-items:flex-end;transition:background .25s}
+.overlay.on{display:flex}
+.overlay.visible{background:rgba(0,0,0,.5)}
+.sheet{width:100%;max-height:92vh;background:var(--white);border-radius:var(--r-lg) var(--r-lg) 0 0;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0)}
+.overlay.visible .sheet{transform:translateY(0);transition:transform .3s cubic-bezier(.34,1.2,.64,1)}
+.sheet-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 20px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--white);z-index:10}
+.sheet-title{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em}
+.sheet-close{width:32px;height:32px;border-radius:50%;background:var(--surface);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
+.sheet-close:active{transform:scale(.9)}
+.sheet-close svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.5;fill:none}
+.sheet-body{padding:20px}
+.sheet-footer{padding:16px 20px;border-top:1px solid var(--line);display:flex;gap:10px;position:sticky;bottom:0;background:var(--white)}
+
+/* ── FORM ────────────────────────────────────── */
+.fg{margin-bottom:16px}
+.fg:last-child{margin-bottom:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.lbl{display:block;font-size:12px;font-weight:700;color:var(--ink-2);letter-spacing:.02em;margin-bottom:6px;text-transform:uppercase}
+.inp{width:100%;padding:12px 14px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;color:var(--ink);transition:border-color var(--t),background var(--t)}
+.inp:focus{outline:none;border-color:var(--amber);background:var(--white)}
+.inp::placeholder{color:var(--ink-4)}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
+.hint{font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.5}
+.hint strong{color:var(--amber);font-weight:700}
+
+/* ── STEPPER ─────────────────────────────────── */
+.stepper{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+.stepper-val{font-size:22px;font-weight:800;color:var(--ink);flex:1;text-align:center;letter-spacing:-.03em}
+.stepper-btn{min-width:40px;height:40px;border-radius:8px;border:1.5px solid var(--line);background:var(--white);color:var(--ink-2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--t),border-color var(--t)}
+.stepper-btn:active{background:var(--amber-light);border-color:var(--amber)}
+.stepper-btn.wide{min-width:52px;font-size:12px}
+.mode-pills{display:flex;gap:6px;margin-bottom:14px}
+.mode-pill{flex:1;padding:9px 4px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;text-align:center;color:var(--ink-3);transition:background var(--t),border-color var(--t),color var(--t)}
+.mode-pill.on{border-color:var(--amber);background:var(--amber-light);color:var(--amber-dark)}
+.rep-rows{display:flex;flex-direction:column;gap:10px}
+.rep-row{display:flex;align-items:center;gap:10px}
+.rep-row-lbl{font-size:12px;font-weight:600;color:var(--ink-3);width:54px;flex-shrink:0}
+.rep-sval{font-size:18px;font-weight:800;color:var(--ink);min-width:36px;text-align:center}
+
+/* ── LOG CONTEXT ─────────────────────────────── */
+.log-ctx{background:var(--amber-light);border-radius:10px;padding:12px 14px;margin-bottom:20px}
+.log-ctx-name{font-size:15px;font-weight:800;color:var(--amber-dark);margin-bottom:2px}
+.log-ctx-spec{font-size:12px;color:var(--amber-dark);opacity:.8}
+
+/* ── TOAST ───────────────────────────────────── */
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--ink);color:white;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s cubic-bezier(.34,1.2,.64,1);white-space:nowrap;pointer-events:none;box-shadow:var(--sh-lg)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
+#toast.warn{background:var(--amber-dark)}
+
+/* ── SECTION LABEL ───────────────────────────── */
+.label-row{font-size:12px;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
+
+@media(min-width:600px){
+  .scroll>*,.sec{max-width:560px;margin-left:auto;margin-right:auto}
+  .overlay{align-items:center}
+  .sheet{border-radius:var(--r-lg);max-width:480px;margin:0 auto;max-height:85vh}
+  #toast{top:24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ────────────────────────────────── -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <img src="slo_laranja@2x.png" alt="SLO" class="hdr-logo-img">
+  </div>
+  <span class="hdr-subtitle" id="hdr-sub">Seu treino</span>
+</header>
+
+<!-- ─── SCROLL ────────────────────────────────── -->
+<div class="scroll" id="scroll">
+
+  <!-- HOME -->
+  <section class="sec on" id="sec-home">
+    <div id="cal-widget"></div>
+    <div id="today-widget"></div>
+    <div style="margin-bottom:20px">
+      <button class="btn ghost full" onclick="goTo('workouts')" style="font-size:13px;font-weight:700;letter-spacing:.02em">Ver treinos da semana →</button>
+    </div>
+    <div class="sec-hdr" style="margin-top:4px">
+      <div class="sec-title">Mesociclos<small>Organize seus ciclos</small></div>
+      <button class="btn-round primary" onclick="openSheet('sh-meso')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div id="meso-list"></div>
+    <div class="label-row">Importar Mesociclo</div>
+    <div class="import-grid">
+      <button class="import-btn" onclick="importA()">
+        <div class="import-btn-icon" style="background:#FEF3C7">🔥</div>
+        <div class="import-btn-title">Mesociclo A</div>
+        <div class="import-btn-sub">Hipertrofia · 8 sem · 5x</div>
+      </button>
+      <button class="import-btn" onclick="importB()">
+        <div class="import-btn-icon" style="background:#EDE9FE">💪</div>
+        <div class="import-btn-title">Mesociclo B</div>
+        <div class="import-btn-sub">Força · 6 sem · 4x</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- TREINOS -->
+  <section class="sec" id="sec-workouts">
+    <div class="sec-hdr">
+      <div class="sec-title">Treinos<small>Exercícios por dia</small></div>
+      <button class="btn-round primary" onclick="openSheet('sh-workout')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="filter-wrap">
+      <select class="select" id="filter-meso" onchange="renderWorkouts()">
+        <option value="">Todos os mesociclos</option>
+      </select>
+    </div>
+    <div id="workout-list"></div>
+  </section>
+
+  <!-- PROGRESSO -->
+  <section class="sec" id="sec-progress">
+    <div class="sec-hdr">
+      <div class="sec-title">Progresso<small>Evolução por exercício</small></div>
+    </div>
+    <div id="progress-content"></div>
+  </section>
+
+  <!-- PERFIL -->
+  <section class="sec" id="sec-profile">
+    <div id="profile-content"></div>
+  </section>
+
+</div><!-- /scroll -->
+
+<!-- ─── BOTTOM NAV ─────────────────────────────── -->
+<nav class="nav">
+  <button class="nav-btn on" data-sec="home" onclick="goTo('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Início</span>
+  </button>
+  <button class="nav-btn" data-sec="workouts" onclick="goTo('workouts')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Treinos</span>
+  </button>
+  <button class="nav-btn" data-sec="progress" onclick="goTo('progress')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Progresso</span>
+  </button>
+  <button class="nav-btn" data-sec="profile" onclick="goTo('profile')">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Perfil</span>
+  </button>
+</nav>
+
+<!-- ─── MODALS ─────────────────────────────────── -->
+
+<!-- Mesociclo -->
+<div class="overlay" id="sh-meso" onclick="overlayClick(event,'sh-meso')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title" id="sh-meso-title">Novo Mesociclo</span>
+      <button class="sheet-close" onclick="closeSheet('sh-meso')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form class="sheet-body" onsubmit="saveMeso(event)">
+      <div class="fg"><label class="lbl">Nome</label><input id="meso-name" class="inp" required placeholder="Ex: Hipertrofia — Fase 1"></div>
+      <div class="fg"><label class="lbl">Descrição</label><textarea id="meso-desc" class="inp" placeholder="Foco, frequência, objetivos…"></textarea></div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Início</label><input id="meso-start" type="date" class="inp" required></div>
+        <div class="fg"><label class="lbl">Término</label><input id="meso-end" type="date" class="inp"></div>
+      </div>
+      <input type="hidden" id="meso-edit-id">
+      <div class="sheet-footer" style="padding:0;border:0;margin-top:8px">
+        <button type="button" class="btn ghost full" onclick="closeSheet('sh-meso')">Cancelar</button>
+        <button type="submit" class="btn primary full">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Treino -->
+<div class="overlay" id="sh-workout" onclick="overlayClick(event,'sh-workout')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title">Novo Treino</span>
+      <button class="sheet-close" onclick="closeSheet('sh-workout')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form class="sheet-body" onsubmit="saveWorkout(event)">
+      <div class="fg"><label class="lbl">Mesociclo</label>
+        <select id="wk-meso" class="inp" required><option value="">Selecione</option></select>
+      </div>
+      <div class="fg"><label class="lbl">Nome</label><input id="wk-name" class="inp" required placeholder="Ex: Treino A"></div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Dia</label>
+          <select id="wk-day" class="inp">
+            <option>Segunda</option><option>Terça</option><option>Quarta</option>
+            <option>Quinta</option><option>Sexta</option><option>Sábado</option><option>Domingo</option>
+          </select>
+        </div>
+        <div class="fg"><label class="lbl">Foco muscular</label><input id="wk-focus" class="inp" placeholder="Peito, Costas…"></div>
+      </div>
+      <div class="sheet-footer" style="padding:0;border:0;margin-top:8px">
+        <button type="button" class="btn ghost full" onclick="closeSheet('sh-workout')">Cancelar</button>
+        <button type="submit" class="btn primary full">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Exercício -->
+<div class="overlay" id="sh-exercise" onclick="overlayClick(event,'sh-exercise')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title" id="sh-ex-title">Exercício</span>
+      <button class="sheet-close" onclick="closeSheet('sh-exercise')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form class="sheet-body" onsubmit="saveExercise(event)">
+      <input type="hidden" id="ex-workout-id">
+      <input type="hidden" id="ex-edit-id">
+      <div class="fg"><label class="lbl">Nome do exercício</label><input id="ex-name" class="inp" required placeholder="Ex: Supino Reto com Barra"></div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Séries</label><input id="ex-sets" class="inp" required placeholder="3" value="3"></div>
+        <div class="fg"><label class="lbl">Repetições</label><input id="ex-reps" class="inp" required placeholder="8-12"></div>
+      </div>
+      <div class="fg"><label class="lbl">Descanso</label><input id="ex-rest" class="inp" placeholder="90s"></div>
+      <div class="fg"><label class="lbl">Observações</label><textarea id="ex-notes" class="inp" placeholder="Técnica, variações, dicas…"></textarea></div>
+      <div class="sheet-footer" style="padding:0;border:0;margin-top:8px">
+        <button type="button" class="btn ghost full" onclick="closeSheet('sh-exercise')">Cancelar</button>
+        <button type="submit" class="btn primary full">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Log de execução -->
+<div class="overlay" id="sh-log" onclick="overlayClick(event,'sh-log')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title">Registrar Execução</span>
+      <button class="sheet-close" onclick="closeSheet('sh-log')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="log-ctx" id="log-ctx"></div>
+      <form onsubmit="saveLog(event)">
+        <input type="hidden" id="log-ex-id">
+        <input type="hidden" id="log-date">
+        <div class="fg">
+          <label class="lbl">Carga (kg)</label>
+          <div class="stepper">
+            <button type="button" class="stepper-btn wide" onclick="adjW(-2.5)">−2.5</button>
+            <button type="button" class="stepper-btn" onclick="adjW(-0.5)">−½</button>
+            <span class="stepper-val" id="log-weight-val">0kg</span>
+            <button type="button" class="stepper-btn" onclick="adjW(0.5)">+½</button>
+            <button type="button" class="stepper-btn wide" onclick="adjW(2.5)">+2.5</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Repetições</label>
+          <div class="mode-pills">
+            <button type="button" class="mode-pill on" data-mode="equal" onclick="setRepMode('equal')">Iguais</button>
+            <button type="button" class="mode-pill" data-mode="up" onclick="setRepMode('up')">↑ Prog.</button>
+            <button type="button" class="mode-pill" data-mode="down" onclick="setRepMode('down')">↓ Reg.</button>
+          </div>
+          <div class="rep-rows" id="log-rep-rows"></div>
+        </div>
+        <div class="fg" style="margin-top:16px"><label class="lbl">Observações</label><textarea id="log-notes" class="inp" placeholder="Sensação, técnica, ajustes…"></textarea></div>
+        <div style="margin-top:8px;display:flex;gap:10px">
+          <button type="button" class="btn ghost full" onclick="closeSheet('sh-log')">Cancelar</button>
+          <button type="submit" class="btn primary full">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// SEED DATA
+// ═══════════════════════════════════════════════
+
+const MESO_A = {
+  name:"Mesociclo A — Hipertrofia",
+  description:"8 semanas · 5x/semana · Hipertrofia + Manguito + Lombar",
+  weeks:8,freq:5,
+  workouts:[
+    {name:"Treino A",day:"Segunda",focus:"Peito + Tríceps + Manguito",exercises:[
+      {name:"Rotação Externa na Polia (manguito)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador — foco preventivo"},
+      {name:"Supino Reto na Máquina",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Supino Inclinado na Máquina",sets:"3",reps:"8-12",rest:"90s",notes:""},
+      {name:"Crucifixo na Máquina ou Cabo",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Tríceps Corda na Polia",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Tríceps Testa na Polia com Corda",sets:"2-3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
+    ]},
+    {name:"Treino B",day:"Terça",focus:"Costas + Bíceps",exercises:[
+      {name:"Puxada Alta Frente (pegada média)",sets:"3-4",reps:"8-12",rest:"90s",notes:""},
+      {name:"Remada Curvada com Barra ou T-bar",sets:"3",reps:"6-10",rest:"90s",notes:""},
+      {name:"Remada Unilateral com Halter",sets:"3",reps:"8-12",rest:"60s",notes:"Cada lado"},
+      {name:"Pulldown com Corda (ou Pullover)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Rosca Direta com Barra",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Rosca Martelo com Halteres",sets:"2-3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
+    ]},
+    {name:"Treino C",day:"Quarta",focus:"Pernas (Quad + Panturrilha) + Lombar",exercises:[
+      {name:"Agachamento Livre ou Smith",sets:"4",reps:"6-10",rest:"120s",notes:""},
+      {name:"Leg Press 45°",sets:"3",reps:"10-15",rest:"90s",notes:""},
+      {name:"Cadeira Extensora",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Hack Squat ou Búlgaro",sets:"3",reps:"8-12",rest:"90s",notes:"Cada perna"},
+      {name:"Panturrilha em Pé",sets:"4",reps:"12-20",rest:"45s",notes:""},
+      {name:"Levantamento Terra Romeno (lombar)",sets:"3",reps:"8-12",rest:"90s",notes:"Foco lombar"},
+      {name:"Hiperextensão Lombar",sets:"3",reps:"12-15",rest:"60s",notes:""}
+    ]},
+    {name:"Treino D",day:"Quinta",focus:"Ombros + Trapézio + Manguito",exercises:[
+      {name:"Rotação Externa na Polia (manguito)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
+      {name:"Desenvolvimento com Halteres",sets:"4",reps:"8-12",rest:"90s",notes:""},
+      {name:"Elevação Lateral com Halteres",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Elevação Frontal Alternada",sets:"3",reps:"10-12",rest:"60s",notes:"Cada braço"},
+      {name:"Crucifixo Invertido (deltóide posterior)",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Encolhimento com Barra ou Halteres",sets:"3",reps:"10-15",rest:"60s",notes:"Trapézio"},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
+    ]},
+    {name:"Treino E",day:"Sexta",focus:"Posterior + Glúteo + Panturrilha",exercises:[
+      {name:"Stiff (ou Terra Romeno)",sets:"4",reps:"8-12",rest:"90s",notes:""},
+      {name:"Cadeira Flexora",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Mesa Flexora (deitado)",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Hip Thrust (elevação pélvica)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Abdução na Máquina ou Cabo",sets:"3",reps:"12-15",rest:"45s",notes:""},
+      {name:"Panturrilha Sentado",sets:"3",reps:"15-20",rest:"45s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
+    ]}
+  ]
+};
+
+const MESO_B = {
+  name:"Mesociclo B — Força",
+  description:"6 semanas · 4x/semana · Força + Resistência Muscular",
+  weeks:6,freq:4,
+  workouts:[
+    {name:"Treino A",day:"Segunda",focus:"Peito + Ombros",exercises:[
+      {name:"Supino Reto com Barra",sets:"4",reps:"5-8",rest:"120s",notes:"Foco em força"},
+      {name:"Supino Inclinado com Halteres",sets:"3",reps:"8-10",rest:"90s",notes:""},
+      {name:"Crucifixo Inclinado",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Desenvolvimento Militar",sets:"4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Elevação Lateral",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Elevação Frontal com Disco",sets:"2",reps:"12-15",rest:"60s",notes:""}
+    ]},
+    {name:"Treino B",day:"Terça",focus:"Costas + Bíceps",exercises:[
+      {name:"Barra Fixa (ou Puxada)",sets:"4",reps:"6-10",rest:"90s",notes:"Foco em força"},
+      {name:"Remada Curvada",sets:"4",reps:"8-10",rest:"90s",notes:""},
+      {name:"Remada Cavalinho",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Pullover na Polia",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Rosca Direta",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Rosca Concentrada",sets:"3",reps:"10-12",rest:"60s",notes:""}
+    ]},
+    {name:"Treino C",day:"Quinta",focus:"Pernas (Quad + Posterior)",exercises:[
+      {name:"Agachamento Livre",sets:"4",reps:"5-8",rest:"120s",notes:"Foco em força"},
+      {name:"Leg Press",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Cadeira Extensora",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Stiff",sets:"4",reps:"8-10",rest:"90s",notes:""},
+      {name:"Cadeira Flexora",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Panturrilha em Pé",sets:"4",reps:"15-20",rest:"60s",notes:""}
+    ]},
+    {name:"Treino D",day:"Sexta",focus:"Braços + Abdômen",exercises:[
+      {name:"Rosca Direta com Barra W",sets:"4",reps:"8-12",rest:"60s",notes:""},
+      {name:"Rosca Alternada",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Rosca Scott",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Tríceps Francês",sets:"4",reps:"8-12",rest:"60s",notes:""},
+      {name:"Tríceps Corda",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Tríceps Mergulho",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Prancha Isométrica",sets:"3",reps:"60s",rest:"45s",notes:"Tempo"},
+      {name:"Abdominal Canivete",sets:"3",reps:"15-20",rest:"45s",notes:""}
+    ]}
+  ]
+};
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+
+const K={m:'slo_mesocycles',w:'slo_workouts',e:'slo_exercises',l:'slo_workout_logs'};
+
+function get(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}}
+function set(key,val){localStorage.setItem(key,JSON.stringify(val))}
+function uid(){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)})}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+const DB={
+  getMesos(){return get(K.m)},
+  saveMeso(d){const m=get(K.m);d.id=d.id||uid();d.created_at=Date.now();m.push(d);set(K.m,m);return d},
+  updateMeso(id,u){const m=get(K.m);const i=m.findIndex(x=>x.id===id);if(i>-1){m[i]={...m[i],...u};set(K.m,m)}},
+  deleteMeso(id){set(K.m,get(K.m).filter(x=>x.id!==id));set(K.w,get(K.w).filter(w=>w.mesocycle_id!==id))},
+
+  getWorkouts(){return get(K.w)},
+  saveWorkout(d){const m=get(K.w);d.id=d.id||uid();d.created_at=Date.now();m.push(d);set(K.w,m);return d},
+  deleteWorkout(id){set(K.w,get(K.w).filter(x=>x.id!==id));set(K.e,get(K.e).filter(e=>e.workout_id!==id))},
+
+  getExercises(){return get(K.e)},
+  saveExercise(d){const m=get(K.e);d.id=d.id||uid();d.created_at=Date.now();m.push(d);set(K.e,m);return d},
+  updateExercise(id,u){const m=get(K.e);const i=m.findIndex(x=>x.id===id);if(i>-1){m[i]={...m[i],...u};set(K.e,m)}},
+  deleteExercise(id){set(K.e,get(K.e).filter(x=>x.id!==id))},
+
+  getLogs(){return get(K.l)},
+  saveLog(d){const m=get(K.l);d.id=d.id||uid();d.created_at=Date.now();m.push(d);set(K.l,m);return d},
+  deleteLog(id){set(K.l,get(K.l).filter(x=>x.id!==id))},
+  deleteLogsForWorkout(wkId){const ids=new Set(get(K.e).filter(e=>e.workout_id===wkId).map(e=>e.id));set(K.l,get(K.l).filter(l=>!ids.has(l.exercise_id)))},
+  clearAll(){Object.values(K).forEach(k=>localStorage.removeItem(k))}
+};
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+
+let toastTimer;
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='show '+(type||'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className=''},2800);
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+
+const SUBTITLES={home:'Seu treino',workouts:'Exercícios',progress:'Evolução',profile:'Perfil'};
+const DAY_PT=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+function goTo(sec){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('on',b.dataset.sec===sec);
+  });
+  document.getElementById('sec-'+sec).classList.add('on');
+  document.getElementById('hdr-sub').textContent=SUBTITLES[sec]||'SLO';
+  document.getElementById('scroll').scrollTo(0,0);
+  if(sec==='home')renderHome();
+  else if(sec==='workouts')renderWorkouts();
+  else if(sec==='progress')renderProgress();
+  else if(sec==='profile')renderProfile();
+}
+
+// ═══════════════════════════════════════════════
+// SHEETS
+// ═══════════════════════════════════════════════
+
+function openSheet(id){
+  const el=document.getElementById(id);
+  el.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('on','visible')));
+}
+function closeSheet(id){
+  const el=document.getElementById(id);
+  el.classList.remove('visible');
+  setTimeout(()=>{el.classList.remove('on');el.style.display='';},320);
+}
+function overlayClick(e,id){if(e.target===document.getElementById(id))closeSheet(id);}
+
+// ═══════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════
+
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+
+function prevCal(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderHome();}
+function nextCal(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderHome();}
+
+const MONTH_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DOW_SHORT=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+function renderCalWidget(){
+  const logs=DB.getLogs();
+  const trained=new Set(logs.map(l=>{const d=new Date(l.date);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`}));
+  const today=new Date();
+  const todayKey=`${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+  const firstDow=(new Date(calYear,calMonth,1).getDay()+6)%7; // Mon=0
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  let cells='';
+  for(let i=0;i<firstDow;i++)cells+=`<div class="cal-day"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const key=`${calYear}-${calMonth}-${d}`;
+    const cls=['cal-day','in',trained.has(key)?'trained':'',key===todayKey?'today':''].filter(Boolean).join(' ');
+    cells+=`<div class="${cls}">${d}</div>`;
+  }
+  document.getElementById('cal-widget').innerHTML=`<div class="cal">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="prevCal()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="cal-month-lbl">${MONTH_PT[calMonth]} ${calYear}</span>
+      <button class="cal-nav" onclick="nextCal()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="cal-grid">
+      ${DOW_SHORT.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>
+  </div>`;
+}
+
+function renderHome(){
+  renderCalWidget();
+  renderTodayWidget();
+  const mesos=DB.getMesos();
+  const list=document.getElementById('meso-list');
+  if(!mesos.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Nenhum mesociclo</div><div class="empty-text">Crie um novo ou importe um<br>dos mesociclos prontos abaixo.</div></div>`;
+    return;
+  }
+  list.innerHTML=mesos.map(m=>{
+    const s=m.start_date?new Date(m.start_date).toLocaleDateString('pt-BR'):'—';
+    const e=m.end_date?new Date(m.end_date).toLocaleDateString('pt-BR'):'—';
+    const status=m.status||'planned';
+    const labels={active:'Ativo',planned:'Planejado',completed:'Concluído'};
+    const wks=DB.getWorkouts().filter(w=>w.mesocycle_id===m.id);
+    return`<div class="card"><div class="card-pad">
+      <div class="card-row">
+        <div style="min-width:0"><div class="card-title">${esc(m.name)}</div>${m.description?`<div class="card-sub">${esc(m.description)}</div>`:''}</div>
+        <span class="badge ${status}">${labels[status]||status}</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--ink-4)">
+        <span>📅 ${s} → ${e}</span>
+        <span>🏋 ${wks.length} treinos</span>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="card-pad" style="display:flex;gap:8px">
+      ${status!=='active'?`<button class="btn primary sm" onclick="activateMeso('${m.id}')">Ativar</button>`:`<button class="btn ghost sm" onclick="completeMeso('${m.id}')">Concluir</button>`}
+      <button class="btn ghost sm" onclick="editMeso('${m.id}')">Editar</button>
+      <button class="btn danger sm" style="margin-left:auto" onclick="deleteMeso('${m.id}')">Excluir</button>
+    </div></div>`;
+  }).join('');
+}
+
+function renderTodayWidget(){
+  const mesos=DB.getMesos();
+  const active=mesos.find(m=>m.status==='active');
+  const w=document.getElementById('today-widget');
+  const todayName=DAY_PT[new Date().getDay()];
+  if(!active){
+    w.innerHTML=`<div class="today-card" style="background:var(--surface);border:1px solid var(--line);box-shadow:none">
+      <div class="today-eyebrow" style="color:var(--ink-4)">Hoje · ${todayName}</div>
+      <div class="today-name" style="color:var(--ink-3)">Nenhum mesociclo ativo</div>
+    </div>`;
+    return;
+  }
+  const workouts=DB.getWorkouts().filter(wk=>wk.mesocycle_id===active.id);
+  const todayWk=workouts.find(wk=>wk.day_of_week===todayName);
+  if(!todayWk){
+    w.innerHTML=`<div class="today-card" style="background:var(--surface);border:1px solid var(--line);box-shadow:none">
+      <div class="today-eyebrow" style="color:var(--ink-4)">Hoje · ${todayName}</div>
+      <div class="today-name" style="color:var(--ink)">Dia de descanso</div>
+      <div class="today-focus" style="color:var(--ink-3)">Recuperação ativa</div>
+    </div>`;
+    return;
+  }
+  const exCount=DB.getExercises().filter(e=>e.workout_id===todayWk.id).length;
+  w.innerHTML=`<div class="today-card">
+    <div class="today-eyebrow">Hoje · ${todayName}</div>
+    <div class="today-name">${esc(todayWk.name)}</div>
+    <div class="today-focus">${esc(todayWk.focus||'')}</div>
+    <span class="today-chip">${exCount} exercícios</span>
+  </div>`;
+}
+
+function activateMeso(id){
+  DB.getMesos().forEach(m=>{
+    if(m.id===id)DB.updateMeso(id,{status:'active'});
+    else if(m.status==='active')DB.updateMeso(m.id,{status:'planned'});
+  });
+  toast('Mesociclo ativado!','ok');
+  renderHome();
+}
+function completeMeso(id){
+  DB.updateMeso(id,{status:'completed'});
+  toast('Mesociclo concluído!','ok');
+  renderHome();
+}
+function deleteMeso(id){
+  if(!confirm('Excluir este mesociclo e todos os treinos e exercícios?'))return;
+  DB.deleteMeso(id);
+  toast('Mesociclo excluído','warn');
+  renderHome();
+}
+function editMeso(id){
+  const m=DB.getMesos().find(x=>x.id===id);
+  if(!m)return;
+  document.getElementById('sh-meso-title').textContent='Editar Mesociclo';
+  document.getElementById('meso-name').value=m.name||'';
+  document.getElementById('meso-desc').value=m.description||'';
+  document.getElementById('meso-start').value=m.start_date?new Date(m.start_date).toISOString().split('T')[0]:'';
+  document.getElementById('meso-end').value=m.end_date?new Date(m.end_date).toISOString().split('T')[0]:'';
+  document.getElementById('meso-edit-id').value=id;
+  openSheet('sh-meso');
+}
+function saveMeso(e){
+  e.preventDefault();
+  const editId=document.getElementById('meso-edit-id').value;
+  const data={
+    name:document.getElementById('meso-name').value,
+    description:document.getElementById('meso-desc').value,
+    start_date:new Date(document.getElementById('meso-start').value).getTime(),
+    end_date:document.getElementById('meso-end').value?new Date(document.getElementById('meso-end').value).getTime():null,
+  };
+  if(editId){DB.updateMeso(editId,data);toast('Mesociclo atualizado','ok');}
+  else{data.status='planned';DB.saveMeso(data);toast('Mesociclo criado!','ok');}
+  closeSheet('sh-meso');
+  document.getElementById('meso-edit-id').value='';
+  document.getElementById('sh-meso-title').textContent='Novo Mesociclo';
+  e.target.reset();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// IMPORT
+// ═══════════════════════════════════════════════
+
+function importMeso(data){
+  const meso=DB.saveMeso({
+    name:data.name,description:data.description,
+    start_date:Date.now(),
+    end_date:Date.now()+(data.weeks*7*24*60*60*1000),
+    status:'planned'
+  });
+  let total=0;
+  data.workouts.forEach((wd,i)=>{
+    const wk=DB.saveWorkout({mesocycle_id:meso.id,name:wd.name,day_of_week:wd.day,focus:wd.focus,order:i+1});
+    wd.exercises.forEach((ex,j)=>{
+      DB.saveExercise({workout_id:wk.id,name:ex.name,sets:String(ex.sets),reps:ex.reps,rest_time:ex.rest||'',notes:ex.notes||'',order:j+1});
+      total++;
+    });
+  });
+  return total;
+}
+function importA(){
+  if(!confirm(`Importar ${MESO_A.name}?\n35 exercícios em 5 treinos.`))return;
+  const n=importMeso(MESO_A);
+  toast(`Mesociclo A importado — ${n} exercícios`,'ok');
+  renderHome();
+}
+function importB(){
+  if(!confirm(`Importar ${MESO_B.name}?\n26 exercícios em 4 treinos.`))return;
+  const n=importMeso(MESO_B);
+  toast(`Mesociclo B importado — ${n} exercícios`,'ok');
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// TREINOS
+// ═══════════════════════════════════════════════
+
+function renderWorkouts(){
+  const mesos=DB.getMesos();
+  const workouts=DB.getWorkouts();
+  const exercises=DB.getExercises();
+
+  // populate filter
+  const sel=document.getElementById('filter-meso');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Todos os mesociclos</option>'+
+    mesos.map(m=>`<option value="${m.id}"${cur===m.id?' selected':''}>${esc(m.name)}</option>`).join('');
+  sel.value=cur;
+
+  // populate workout modal meso select
+  const wsel=document.getElementById('wk-meso');
+  wsel.innerHTML='<option value="">Selecione</option>'+mesos.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+
+  const filter=sel.value;
+  let filtered=filter?workouts.filter(w=>w.mesocycle_id===filter):workouts;
+
+  const container=document.getElementById('workout-list');
+  if(!filtered.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Nenhum treino</div><div class="empty-text">Importe um mesociclo ou crie<br>um treino personalizado.</div></div>`;
+    return;
+  }
+
+  // group by mesocycle
+  const groups={};
+  filtered.forEach(w=>{
+    if(!groups[w.mesocycle_id])groups[w.mesocycle_id]=[];
+    groups[w.mesocycle_id].push(w);
+  });
+
+  container.innerHTML=Object.entries(groups).map(([mesoId,wks])=>{
+    const meso=mesos.find(m=>m.id===mesoId);
+    const mesoName=meso?meso.name:'Mesociclo';
+    const mesoStatus=meso?meso.status:'planned';
+    return`<div class="wk-group">
+      <div class="wk-group-label">${esc(mesoName)} ${mesoStatus==='active'?'· <span style="color:var(--amber)">Ativo</span>':''}</div>
+      ${wks.map(wk=>renderWkCard(wk,exercises)).join('')}
+    </div>`;
+  }).join('');
+
+  // restore previously open cards
+  openCards.forEach(id=>{const el=document.getElementById('wkc-'+id);if(el)el.classList.add('open');});
+
+  // auto-expand today's workout in active mesocycle (first time only)
+  const todayName=DAY_PT[new Date().getDay()];
+  const activeMeso=mesos.find(m=>m.status==='active');
+  if(activeMeso){
+    filtered.filter(w=>w.mesocycle_id===activeMeso.id&&w.day_of_week===todayName).forEach(w=>{
+      if(!openCards.has(w.id)){const el=document.getElementById('wkc-'+w.id);if(el){el.classList.add('open');openCards.add(w.id);}}
+    });
+  }
+}
+
+function renderWkCard(wk,exercises){
+  const exs=exercises.filter(e=>e.workout_id===wk.id);
+  const logs=DB.getLogs();
+  const todayStr=new Date().toDateString();
+  return`<div class="wk-card" id="wkc-${wk.id}">
+    <div class="wk-card-hdr" onclick="toggleWk('${wk.id}')">
+      <div class="wk-card-info">
+        <div class="wk-card-title">${esc(wk.name)}</div>
+        <div class="wk-card-meta">${esc(wk.day_of_week||'')}${wk.focus?' · '+esc(wk.focus):''} · ${exs.length} exercícios</div>
+      </div>
+      <div class="wk-card-toggle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </div>
+    <div class="wk-card-body">
+      <div class="ex-list">
+        ${exs.length?exs.map(ex=>{
+          const exLogs=logs.filter(l=>l.exercise_id===ex.id).sort((a,b)=>b.date-a.date);
+          const lastLog=exLogs[0];
+          const loggedToday=exLogs.some(l=>new Date(l.date).toDateString()===todayStr);
+          return`<div class="ex-item">
+            <div>
+              <div class="ex-name">${esc(ex.name)}</div>
+              <div class="ex-spec">${esc(ex.sets)}× ${esc(ex.reps)}${ex.rest_time?' · '+esc(ex.rest_time):''}</div>
+              ${ex.notes?`<div class="ex-note">${esc(ex.notes)}</div>`:''}
+              ${lastLog?`<div class="ex-spec" style="color:var(--amber-dark);margin-top:2px">Último: ${lastLog.weight}kg · ${new Date(lastLog.date).toLocaleDateString('pt-BR')}</div>`:''}
+            </div>
+            <div class="ex-actions">
+              <button class="ibtn log${loggedToday?' logged':''}" title="Registrar" onclick="openLog('${ex.id}')">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button class="ibtn edit" title="Editar" onclick="openEditEx('${ex.id}')">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="ibtn del" title="Excluir" onclick="deleteEx('${ex.id}')">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join(''):`<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">Nenhum exercício ainda</div>`}
+      </div>
+      <div class="wk-footer" style="justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <button class="btn danger sm" onclick="deleteWk('${wk.id}')">Excluir treino</button>
+        <button class="btn ghost sm" onclick="clearLogsForWorkout('${wk.id}')">Limpar registros</button>
+        <button class="btn primary sm" onclick="openAddEx('${wk.id}')">+ Exercício</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const openCards=new Set();
+function toggleWk(id){
+  const el=document.getElementById('wkc-'+id);
+  if(el.classList.contains('open')){el.classList.remove('open');openCards.delete(id);}
+  else{el.classList.add('open');openCards.add(id);}
+}
+
+function saveWorkout(e){
+  e.preventDefault();
+  DB.saveWorkout({
+    mesocycle_id:document.getElementById('wk-meso').value,
+    name:document.getElementById('wk-name').value,
+    day_of_week:document.getElementById('wk-day').value,
+    focus:document.getElementById('wk-focus').value,
+    order:DB.getWorkouts().length+1
+  });
+  closeSheet('sh-workout');
+  e.target.reset();
+  toast('Treino criado!','ok');
+  renderWorkouts();
+}
+function deleteWk(id){
+  if(!confirm('Excluir treino e todos os exercícios?'))return;
+  DB.deleteWorkout(id);
+  toast('Treino excluído','warn');
+  renderWorkouts();
+}
+function clearLogsForWorkout(wkId){
+  if(!confirm('Apagar todos os registros deste treino? Os exercícios serão mantidos.'))return;
+  DB.deleteLogsForWorkout(wkId);
+  toast('Registros apagados','warn');
+  renderWorkouts();
+}
+
+// ═══════════════════════════════════════════════
+// EXERCÍCIOS
+// ═══════════════════════════════════════════════
+
+function openAddEx(workoutId){
+  document.getElementById('sh-ex-title').textContent='Novo Exercício';
+  document.getElementById('ex-workout-id').value=workoutId;
+  document.getElementById('ex-edit-id').value='';
+  document.getElementById('ex-name').value='';
+  document.getElementById('ex-sets').value='3';
+  document.getElementById('ex-reps').value='';
+  document.getElementById('ex-rest').value='';
+  document.getElementById('ex-notes').value='';
+  openSheet('sh-exercise');
+}
+function openEditEx(id){
+  const ex=DB.getExercises().find(e=>e.id===id);
+  if(!ex)return;
+  document.getElementById('sh-ex-title').textContent='Editar Exercício';
+  document.getElementById('ex-workout-id').value=ex.workout_id;
+  document.getElementById('ex-edit-id').value=id;
+  document.getElementById('ex-name').value=ex.name||'';
+  document.getElementById('ex-sets').value=ex.sets||'3';
+  document.getElementById('ex-reps').value=ex.reps||'';
+  document.getElementById('ex-rest').value=ex.rest_time||'';
+  document.getElementById('ex-notes').value=ex.notes||'';
+  openSheet('sh-exercise');
+}
+function saveExercise(e){
+  e.preventDefault();
+  const editId=document.getElementById('ex-edit-id').value;
+  const wid=document.getElementById('ex-workout-id').value;
+  const data={
+    workout_id:wid,
+    name:document.getElementById('ex-name').value,
+    sets:document.getElementById('ex-sets').value,
+    reps:document.getElementById('ex-reps').value,
+    rest_time:document.getElementById('ex-rest').value,
+    notes:document.getElementById('ex-notes').value,
+  };
+  if(editId){DB.updateExercise(editId,data);toast('Exercício atualizado','ok');}
+  else{data.order=DB.getExercises().filter(e=>e.workout_id===wid).length+1;DB.saveExercise(data);toast('Exercício adicionado!','ok');}
+  closeSheet('sh-exercise');
+  renderWorkouts();
+  // re-open the workout card
+  setTimeout(()=>{const el=document.getElementById('wkc-'+wid);if(el&&!el.classList.contains('open'))toggleWk(wid);},100);
+}
+function deleteEx(id){
+  if(!confirm('Excluir exercício?'))return;
+  DB.deleteExercise(id);
+  toast('Exercício excluído','warn');
+  renderWorkouts();
+}
+
+// ═══════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════
+
+let _w=0,_reps=[],_repMode='equal';
+
+function adjW(d){
+  _w=Math.round(Math.max(0,_w+d)*10)/10;
+  document.getElementById('log-weight-val').textContent=Number.isInteger(_w)?_w+'kg':_w+'kg';
+}
+
+function setRepMode(mode){
+  _repMode=mode;
+  document.querySelectorAll('.mode-pill').forEach(p=>p.classList.toggle('on',p.dataset.mode===mode));
+  if(mode==='up'){const b=_reps[0]||10;_reps=_reps.map((_,i)=>b+i);}
+  else if(mode==='down'){const b=_reps[0]||10;_reps=_reps.map((_,i)=>Math.max(0,b+_reps.length-1-i));}
+  renderRepRows();
+}
+
+function adjR(i,d){
+  _reps[i]=Math.max(0,(_reps[i]||0)+d);
+  if(_repMode==='equal'){const v=_reps[i];_reps=_reps.map(()=>v);}
+  renderRepRows();
+}
+
+function renderRepRows(){
+  document.getElementById('log-rep-rows').innerHTML=_reps.map((v,i)=>
+    `<div class="rep-row">
+      <span class="rep-row-lbl">Série ${i+1}</span>
+      <button type="button" class="stepper-btn" onclick="adjR(${i},-1)" style="min-width:36px;height:36px">−</button>
+      <span class="rep-sval">${v}</span>
+      <button type="button" class="stepper-btn" onclick="adjR(${i},1)" style="min-width:36px;height:36px">+</button>
+    </div>`
+  ).join('');
+}
+
+function openLog(exId){
+  const ex=DB.getExercises().find(e=>e.id===exId);
+  if(!ex)return;
+  const logs=DB.getLogs().filter(l=>l.exercise_id===exId).sort((a,b)=>b.date-a.date);
+  const last=logs[0];
+  const ctx=document.getElementById('log-ctx');
+  ctx.innerHTML=`<div class="log-ctx-name">${esc(ex.name)}</div>
+    <div class="log-ctx-spec">Meta: ${esc(ex.sets)}× ${esc(ex.reps)}${ex.rest_time?' · '+esc(ex.rest_time):''}</div>
+    ${last?`<div class="log-ctx-spec" style="margin-top:4px">Último: ${last.weight}kg · ${last.reps_completed} reps · ${new Date(last.date).toLocaleDateString('pt-BR')}</div>`:'<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>'}`;
+  document.getElementById('log-ex-id').value=exId;
+  document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('log-notes').value='';
+
+  // init weight stepper
+  _w=last?last.weight:0;
+  document.getElementById('log-weight-val').textContent=Number.isInteger(_w)?_w+'kg':_w.toFixed(1)+'kg';
+
+  // init rep rows
+  const setsNum=parseInt(ex.sets)||3;
+  const baseRep=last?parseInt(last.reps_completed.split(',')[0])||10:(parseInt(ex.reps)||10);
+  _repMode='equal';
+  _reps=Array(setsNum).fill(baseRep);
+  document.querySelectorAll('.mode-pill').forEach(p=>p.classList.toggle('on',p.dataset.mode==='equal'));
+  renderRepRows();
+
+  openSheet('sh-log');
+}
+function saveLog(e){
+  e.preventDefault();
+  DB.saveLog({
+    exercise_id:document.getElementById('log-ex-id').value,
+    date:new Date(document.getElementById('log-date').value+'T12:00:00').getTime(),
+    weight:_w,
+    sets_completed:_reps.length,
+    reps_completed:_reps.join(', '),
+    notes:document.getElementById('log-notes').value
+  });
+  closeSheet('sh-log');
+  toast('Registrado! 💪','ok');
+  renderWorkouts();
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESSO
+// ═══════════════════════════════════════════════
+
+function renderProgress(){
+  const container=document.getElementById('progress-content');
+  const logs=DB.getLogs();
+  if(!logs.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Sem dados ainda</div><div class="empty-text">Registre seus treinos para<br>acompanhar a evolução.</div></div>`;
+    return;
+  }
+  const exercises=DB.getExercises();
+  const byEx={};
+  logs.forEach(l=>{
+    if(!byEx[l.exercise_id])byEx[l.exercise_id]=[];
+    byEx[l.exercise_id].push(l);
+  });
+
+  const cards=Object.entries(byEx).map(([exId,exLogs])=>{
+    const ex=exercises.find(e=>e.id===exId);
+    const name=ex?ex.name:'Exercício';
+    exLogs.sort((a,b)=>a.date-b.date);
+    const first=exLogs[0];
+    const last=exLogs[exLogs.length-1];
+    const gain=last.weight-first.weight;
+    const pct=first.weight>0?((gain/first.weight)*100).toFixed(1):null;
+    const maxW=Math.max(...exLogs.map(l=>l.weight));
+    const barPct=maxW>0?Math.round((last.weight/maxW)*100):100;
+    const lastDate=new Date(last.date).toLocaleDateString('pt-BR');
+    return`<div class="prog-card">
+      <div class="prog-name">${esc(name)}</div>
+      <div class="prog-grid">
+        <div class="prog-stat"><div class="prog-stat-lbl">Inicial</div><div class="prog-stat-val">${first.weight}kg</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Atual</div><div class="prog-stat-val">${last.weight}kg</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Ganho</div><div class="prog-stat-val ${gain>0?'up':gain<0?'':''}">${gain>=0?'+':''}${gain.toFixed(1)}kg</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">%</div><div class="prog-stat-val ${gain>0?'up':'neutral'}">${pct!==null?(gain>=0?'+':'')+pct+'%':'—'}</div></div>
+      </div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${barPct}%"></div></div>
+      <div class="prog-sessions">${exLogs.length} sessão${exLogs.length!==1?'ões':''} registrada${exLogs.length!==1?'s':''}</div>
+      <div class="prog-last">Último registro: ${lastDate}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML=cards||`<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Sem dados</div></div>`;
+}
+
+// ═══════════════════════════════════════════════
+// PERFIL
+// ═══════════════════════════════════════════════
+
+function renderProfile(){
+  const logs=DB.getLogs();
+  const mesos=DB.getMesos();
+  const exercises=DB.getExercises();
+
+  const totalSessions=new Set(logs.map(l=>new Date(l.date).toDateString())).size;
+  const totalMesos=mesos.length;
+  const totalExercises=exercises.length;
+
+  // streak
+  const dateset=new Set(logs.map(l=>new Date(l.date).toDateString()));
+  let streak=0;
+  const today=new Date();
+  for(let i=0;i<365;i++){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    if(dateset.has(d.toDateString()))streak++;
+    else if(i>0)break;
+  }
+
+  document.getElementById('profile-content').innerHTML=`
+    <div class="prof-hero">
+      <div class="prof-avatar">🏋️</div>
+      <div class="prof-name">Atleta SLO</div>
+      <div class="prof-tagline">Treine. Registre. Evolua.</div>
+    </div>
+    <div class="prof-stats-grid">
+      <div class="prof-stat-card"><div class="prof-stat-val">${totalSessions}</div><div class="prof-stat-lbl">Sessões</div></div>
+      <div class="prof-stat-card"><div class="prof-stat-val">${streak}</div><div class="prof-stat-lbl">Streak</div></div>
+      <div class="prof-stat-card"><div class="prof-stat-val">${totalExercises}</div><div class="prof-stat-lbl">Exercícios</div></div>
+    </div>
+    <div class="prof-action-card">
+      <div class="prof-action-title">Dados e configurações</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-3)">
+          <span>Mesociclos</span><strong style="color:var(--ink)">${totalMesos}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-3)">
+          <span>Registros totais</span><strong style="color:var(--ink)">${logs.length}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-3)">
+          <span>Treinos cadastrados</span><strong style="color:var(--ink)">${DB.getWorkouts().length}</strong>
+        </div>
+        <div style="height:1px;background:var(--line);margin:4px 0"></div>
+        <button class="btn danger full" style="font-size:13px" onclick="clearData()">Apagar todos os dados</button>
+      </div>
+    </div>`;
+}
+
+function clearData(){
+  if(!confirm('Apagar TODOS os dados? Isso é irreversível.'))return;
+  if(!confirm('Tem certeza? Mesociclos, treinos, exercícios e histórico serão perdidos.'))return;
+  DB.clearAll();
+  toast('Dados apagados','warn');
+  renderProfile();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('meso-start').value=new Date().toISOString().split('T')[0];
+  renderHome();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de origem/backup
+extracted/
+*.zip
+
+# Netlify
+.netlify/
