@@ -88,13 +88,14 @@ Tipografia: Inter (300–900). Mobile-first. Bottom-sheet modals. Bottom nav.
 
 ```bash
 # 1. Editar slo.html
-# 2. Sincronizar
-cp slo.html index.html
-
-# 3. Usar Netlify MCP para gerar token e deployar
-# mcp__netlify-deploy-services-updater → operation: deploy-site → siteId: 85cd5608-c200-4c1c-af73-fe2495de95c6
-# Rodar o comando npx gerado imediatamente (token expira rápido)
+# 2. Commitar e empurrar — o GitHub Action faz o resto
+git add slo.html
+git commit -m "descrição da mudança"
+git push
 ```
+
+O GitHub Action (.github/workflows/deploy.yml) copia slo.html → index.html e deploya no Netlify automaticamente.
+Repositório: https://github.com/vivalamatria/slo-treinos
 
 ---
 
