@@ -248,6 +248,15 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 .rep-row-lbl{font-size:12px;font-weight:600;color:var(--ink-3);width:54px;flex-shrink:0}
 .rep-sval{font-size:18px;font-weight:800;color:var(--ink);min-width:36px;text-align:center}
 
+/* ── REST TIMER ──────────────────────────────── */
+.rest-timer{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom));left:12px;right:12px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:150;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;cursor:pointer}
+.rest-timer.hidden{opacity:0;pointer-events:none;transform:translateY(10px)}
+.rest-timer.done{background:var(--green)}
+.rest-timer-label{font-size:11px;font-weight:700;flex:1;opacity:.7;letter-spacing:.06em;text-transform:uppercase}
+.rest-timer-count{font-size:28px;font-weight:900;letter-spacing:-.04em;min-width:56px;text-align:right}
+.rest-timer-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-edit-log{background:rgba(184,120,36,.12);border:1.5px solid var(--amber);color:var(--amber-dark);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+
 /* ── LOG CONTEXT ─────────────────────────────── */
 .log-ctx{background:var(--amber-light);border-radius:10px;padding:12px 14px;margin-bottom:20px}
 .log-ctx-name{font-size:15px;font-weight:800;color:var(--amber-dark);margin-bottom:2px}
@@ -447,7 +456,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 <div class="overlay" id="sh-log" onclick="overlayClick(event,'sh-log')">
   <div class="sheet">
     <div class="sheet-hdr">
-      <span class="sheet-title">Registrar Execução</span>
+      <span class="sheet-title" id="log-sheet-title">Registrar Execução</span>
       <button class="sheet-close" onclick="closeSheet('sh-log')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="sheet-body">
@@ -477,7 +486,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
         <div class="fg" style="margin-top:16px"><label class="lbl">Observações</label><textarea id="log-notes" class="inp" placeholder="Sensação, técnica, ajustes…"></textarea></div>
         <div style="margin-top:8px;display:flex;gap:10px">
           <button type="button" class="btn ghost full" onclick="closeSheet('sh-log')">Cancelar</button>
-          <button type="submit" class="btn primary full">Registrar</button>
+          <button type="submit" class="btn primary full" id="log-submit-btn">Registrar</button>
         </div>
       </form>
     </div>
@@ -486,6 +495,13 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Rest Timer -->
+<div id="rest-timer" class="rest-timer hidden" onclick="cancelTimer()">
+  <span class="rest-timer-label">Descanso</span>
+  <span class="rest-timer-count" id="rest-timer-count">90s</span>
+  <button class="rest-timer-close" onclick="cancelTimer()">✕</button>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -615,6 +631,7 @@ const DB={
 
   getLogs(){return get(K.l)},
   saveLog(d){const m=get(K.l);d.id=d.id||uid();d.created_at=Date.now();m.push(d);set(K.l,m);return d},
+  updateLog(id,u){const m=get(K.l);const i=m.findIndex(x=>x.id===id);if(i>-1){m[i]={...m[i],...u};set(K.l,m)}},
   deleteLog(id){set(K.l,get(K.l).filter(x=>x.id!==id))},
   deleteLogsForWorkout(wkId){const ids=new Set(get(K.e).filter(e=>e.workout_id===wkId).map(e=>e.id));set(K.l,get(K.l).filter(l=>!ids.has(l.exercise_id)))},
   clearAll(){Object.values(K).forEach(k=>localStorage.removeItem(k))}
@@ -1055,7 +1072,7 @@ function deleteEx(id){
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal';
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=90,_restInterval=null;
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
@@ -1087,24 +1104,81 @@ function renderRepRows(){
   ).join('');
 }
 
+function parseRestSecs(str){
+  if(!str)return 90;
+  const m=str.match(/(\d+)\s*(min|m|s)/i);
+  if(!m)return 90;
+  return m[2][0].toLowerCase()==='m'?parseInt(m[1])*60:parseInt(m[1]);
+}
+
+function startRestTimer(secs){
+  cancelTimer();
+  if(!secs)return;
+  const el=document.getElementById('rest-timer');
+  const cnt=document.getElementById('rest-timer-count');
+  let rem=secs;
+  cnt.textContent=rem+'s';
+  el.className='rest-timer';
+  _restInterval=setInterval(()=>{
+    rem--;
+    if(rem<=0){
+      clearInterval(_restInterval);_restInterval=null;
+      cnt.textContent='Pronto!';
+      el.classList.add('done');
+      if(navigator.vibrate)navigator.vibrate([200,100,200]);
+      setTimeout(cancelTimer,3000);
+    }else{
+      cnt.textContent=rem+'s';
+    }
+  },1000);
+}
+
+function cancelTimer(){
+  clearInterval(_restInterval);_restInterval=null;
+  document.getElementById('rest-timer').className='rest-timer hidden';
+}
+
+function openEditLog(logId){
+  const log=DB.getLogs().find(l=>l.id===logId);
+  if(!log)return;
+  _editingLogId=logId;
+  _w=log.weight;
+  document.getElementById('log-weight-val').textContent=Number.isInteger(_w)?_w+'kg':_w.toFixed(1)+'kg';
+  _repMode='equal';
+  _reps=log.reps_completed.split(',').map(s=>parseInt(s.trim())||0);
+  document.querySelectorAll('.mode-pill').forEach(p=>p.classList.toggle('on',p.dataset.mode==='equal'));
+  renderRepRows();
+  document.getElementById('log-notes').value=log.notes||'';
+  document.getElementById('log-sheet-title').textContent='Editar Registro';
+  document.getElementById('log-submit-btn').textContent='Atualizar';
+}
+
 function openLog(exId){
   const ex=DB.getExercises().find(e=>e.id===exId);
   if(!ex)return;
+  _editingLogId=null;
+  _restSecs=parseRestSecs(ex.rest_time);
   const logs=DB.getLogs().filter(l=>l.exercise_id===exId).sort((a,b)=>b.date-a.date);
   const last=logs[0];
+  const todayStr=new Date().toDateString();
+  const todayLog=logs.find(l=>new Date(l.date).toDateString()===todayStr);
   const ctx=document.getElementById('log-ctx');
   ctx.innerHTML=`<div class="log-ctx-name">${esc(ex.name)}</div>
     <div class="log-ctx-spec">Meta: ${esc(ex.sets)}× ${esc(ex.reps)}${ex.rest_time?' · '+esc(ex.rest_time):''}</div>
-    ${last?`<div class="log-ctx-spec" style="margin-top:4px">Último: ${last.weight}kg · ${last.reps_completed} reps · ${new Date(last.date).toLocaleDateString('pt-BR')}</div>`:'<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>'}`;
+    ${todayLog
+      ?`<div class="log-ctx-spec" style="margin-top:6px;display:flex;align-items:center;justify-content:space-between"><span>Hoje: ${todayLog.weight}kg · ${todayLog.reps_completed}</span><button type="button" class="btn-edit-log" onclick="openEditLog('${todayLog.id}')">Editar</button></div>`
+      :last
+        ?`<div class="log-ctx-spec" style="margin-top:4px">Último: ${last.weight}kg · ${last.reps_completed} reps · ${new Date(last.date).toLocaleDateString('pt-BR')}</div>`
+        :`<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>`}`;
   document.getElementById('log-ex-id').value=exId;
   document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('log-notes').value='';
+  document.getElementById('log-sheet-title').textContent='Registrar Execução';
+  document.getElementById('log-submit-btn').textContent='Registrar';
 
-  // init weight stepper
   _w=last?last.weight:0;
   document.getElementById('log-weight-val').textContent=Number.isInteger(_w)?_w+'kg':_w.toFixed(1)+'kg';
 
-  // init rep rows
   const setsNum=parseInt(ex.sets)||3;
   const baseRep=last?parseInt(last.reps_completed.split(',')[0])||10:(parseInt(ex.reps)||10);
   _repMode='equal';
@@ -1116,16 +1190,24 @@ function openLog(exId){
 }
 function saveLog(e){
   e.preventDefault();
-  DB.saveLog({
+  const data={
     exercise_id:document.getElementById('log-ex-id').value,
     date:new Date(document.getElementById('log-date').value+'T12:00:00').getTime(),
     weight:_w,
     sets_completed:_reps.length,
     reps_completed:_reps.join(', '),
     notes:document.getElementById('log-notes').value
-  });
+  };
+  if(_editingLogId){
+    DB.updateLog(_editingLogId,data);
+    toast('Registro atualizado! ✓','ok');
+  }else{
+    DB.saveLog(data);
+    startRestTimer(_restSecs);
+    toast('Registrado! 💪','ok');
+  }
+  _editingLogId=null;
   closeSheet('sh-log');
-  toast('Registrado! 💪','ok');
   renderWorkouts();
 }
 
