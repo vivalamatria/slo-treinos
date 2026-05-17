@@ -272,6 +272,10 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 /* ── SECTION LABEL ───────────────────────────── */
 .label-row{font-size:12px;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 
+.hidden{display:none!important}
+.activity-chip{background:var(--white);border:1.5px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);transition:border-color .15s,color .15s}
+.activity-chip:active{border-color:var(--amber);color:var(--amber-dark)}
+
 @media(min-width:600px){
   .scroll>*,.sec{max-width:560px;margin-left:auto;margin-right:auto}
   .overlay{align-items:center}
@@ -335,6 +339,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
         <option value="">Todos os mesociclos</option>
       </select>
     </div>
+    <div id="activity-chips-wrap"></div>
     <div id="workout-list"></div>
   </section>
 
@@ -444,6 +449,13 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
       </div>
       <div class="fg"><label class="lbl">Descanso</label><input id="ex-rest" class="inp" placeholder="90s"></div>
       <div class="fg"><label class="lbl">Observações</label><textarea id="ex-notes" class="inp" placeholder="Técnica, variações, dicas…"></textarea></div>
+      <div class="fg" id="multi-day-section" style="display:none">
+        <label class="lbl">Adicionar também em</label>
+        <div id="multi-day-list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;font-size:13px"></div>
+      </div>
+      <div id="edit-preserve-notice" class="hidden" style="font-size:11px;color:var(--amber-dark);background:var(--amber-light);border-radius:8px;padding:8px 12px;margin-bottom:4px">
+        ✓ Histórico de carga preservado ao substituir este exercício
+      </div>
       <div class="sheet-footer" style="padding:0;border:0;margin-top:8px">
         <button type="button" class="btn ghost full" onclick="closeSheet('sh-exercise')">Cancelar</button>
         <button type="submit" class="btn primary full">Salvar</button>
@@ -461,6 +473,9 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
     </div>
     <div class="sheet-body">
       <div class="log-ctx" id="log-ctx"></div>
+      <div style="text-align:right;margin:-4px 0 8px">
+        <button type="button" class="btn-edit-log" id="btn-open-edit-ex" onclick="">Editar exercício</button>
+      </div>
       <form onsubmit="saveLog(event)">
         <input type="hidden" id="log-ex-id">
         <input type="hidden" id="log-date">
@@ -499,14 +514,57 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 <!-- Rest Timer -->
 <div id="rest-timer" class="rest-timer hidden" onclick="cancelTimer()">
   <span class="rest-timer-label">Descanso</span>
+  <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(-15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">−15s</button>
+  <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">+15s</button>
   <span class="rest-timer-count" id="rest-timer-count">90s</span>
   <button class="rest-timer-close" onclick="cancelTimer()">✕</button>
+</div>
+
+<!-- Atividade -->
+<div class="overlay" id="sh-activity" onclick="overlayClick(event,'sh-activity')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title" id="sh-act-title">Atividade</span>
+      <button class="sheet-close" onclick="closeSheet('sh-activity')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <input type="hidden" id="act-id">
+      <input type="hidden" id="act-icon">
+      <div class="fg">
+        <label class="lbl">Duração</label>
+        <div class="stepper">
+          <button type="button" class="stepper-btn wide" onclick="adjAct(-10)">−10</button>
+          <button type="button" class="stepper-btn" onclick="adjAct(-5)">−5</button>
+          <span class="stepper-val" id="act-dur-val">30 min</span>
+          <button type="button" class="stepper-btn" onclick="adjAct(5)">+5</button>
+          <button type="button" class="stepper-btn wide" onclick="adjAct(10)">+10</button>
+        </div>
+      </div>
+      <div class="fg"><label class="lbl">Observações</label><textarea id="act-notes" class="inp" placeholder="Como foi?"></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="button" class="btn ghost full" onclick="closeSheet('sh-activity')">Cancelar</button>
+        <button type="button" class="btn primary full" onclick="saveActivity()">Registrar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════
 // SEED DATA
 // ═══════════════════════════════════════════════
+
+const ACTIVITIES=[
+  {id:'caminhada',  name:'Caminhada',    icon:'🚶'},
+  {id:'corrida',    name:'Corrida',      icon:'🏃'},
+  {id:'pedal',      name:'Pedal',        icon:'🚴'},
+  {id:'natacao',    name:'Natação',      icon:'🏊'},
+  {id:'pilates',    name:'Pilates',      icon:'🏋️'},
+  {id:'alongamento',name:'Alongamento',  icon:'🤸'},
+  {id:'meditacao',  name:'Meditação',    icon:'🧘'},
+];
 
 const MESO_A = {
   name:"Mesociclo A — Hipertrofia",
@@ -896,6 +954,11 @@ function renderWorkouts(){
   const filter=sel.value;
   let filtered=filter?workouts.filter(w=>w.mesocycle_id===filter):workouts;
 
+  const actChips=ACTIVITIES.map(a=>
+    `<button class="activity-chip" onclick="quickLogActivity('${a.id}','${esc(a.name)}','${a.icon}')">${a.icon} ${a.name}</button>`
+  ).join('');
+  document.getElementById('activity-chips-wrap').innerHTML=`<div style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px">${actChips}</div>`;
+
   const container=document.getElementById('workout-list');
   if(!filtered.length){
     container.innerHTML=`<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Nenhum treino</div><div class="empty-text">Importe um mesociclo ou crie<br>um treino personalizado.</div></div>`;
@@ -961,8 +1024,8 @@ function renderWkCard(wk,exercises){
               <button class="ibtn log${loggedToday?' logged':''}" title="Registrar" onclick="openLog('${ex.id}')">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
-              <button class="ibtn edit" title="Editar" onclick="openEditEx('${ex.id}')">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <button class="ibtn" title="Iniciar descanso" onclick="startRestTimer(parseRestSecs('${esc(ex.rest_time||'90s')}'))">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </button>
               <button class="ibtn del" title="Excluir" onclick="deleteEx('${ex.id}')">
                 <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -971,13 +1034,14 @@ function renderWkCard(wk,exercises){
           </div>`;
         }).join(''):`<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">Nenhum exercício ainda</div>`}
       </div>
-      <div class="wk-footer" style="justify-content:space-between;flex-wrap:wrap;gap:6px">
-        <button class="btn danger sm" onclick="deleteWk('${wk.id}')">Excluir treino</button>
-        <button class="btn ghost sm" onclick="clearLogsForWorkout('${wk.id}')">Limpar registros</button>
+      <div class="wk-footer" style="justify-content:flex-end;gap:8px">
+        <button class="btn ghost sm" onclick="finishWorkout('${wk.id}')">Finalizar treino ✓</button>
         <button class="btn primary sm" onclick="openAddEx('${wk.id}')">+ Exercício</button>
       </div>
     </div>
-  </div>`;
+  </div><div style="text-align:right;padding:2px 4px 10px">
+  <button class="btn ghost sm" style="color:var(--red);border-color:transparent;font-size:11px" onclick="deleteWk('${wk.id}')">Excluir treino</button>
+</div>`;
 }
 
 const openCards=new Set();
@@ -1014,6 +1078,16 @@ function clearLogsForWorkout(wkId){
   renderWorkouts();
 }
 
+function finishWorkout(wkId){
+  const exs=DB.getExercises().filter(e=>e.workout_id===wkId);
+  const todayStr=new Date().toDateString();
+  const logs=DB.getLogs();
+  const done=exs.filter(ex=>logs.some(l=>l.exercise_id===ex.id && new Date(l.date).toDateString()===todayStr)).length;
+  toast(`Treino finalizado! 💪 ${done}/${exs.length} exercícios registrados`,'ok');
+  const el=document.getElementById('wkc-'+wkId);
+  if(el && el.classList.contains('open')){el.classList.remove('open');openCards.delete(wkId);}
+}
+
 // ═══════════════════════════════════════════════
 // EXERCÍCIOS
 // ═══════════════════════════════════════════════
@@ -1027,6 +1101,22 @@ function openAddEx(workoutId){
   document.getElementById('ex-reps').value='';
   document.getElementById('ex-rest').value='';
   document.getElementById('ex-notes').value='';
+  document.getElementById('edit-preserve-notice').classList.add('hidden');
+  const wk=DB.getWorkouts().find(w=>w.id===workoutId);
+  const others=wk?DB.getWorkouts().filter(w=>w.mesocycle_id===wk.mesocycle_id && w.id!==workoutId):[];
+  const sec=document.getElementById('multi-day-section');
+  const list=document.getElementById('multi-day-list');
+  if(others.length>0){
+    list.innerHTML=others.map(w=>
+      `<label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" value="${w.id}" class="multi-day-cb">
+        <span>${esc(w.name)} · ${esc(w.day_of_week)}</span>
+      </label>`
+    ).join('');
+    sec.style.display='';
+  }else{
+    sec.style.display='none';
+  }
   openSheet('sh-exercise');
 }
 function openEditEx(id){
@@ -1040,6 +1130,8 @@ function openEditEx(id){
   document.getElementById('ex-reps').value=ex.reps||'';
   document.getElementById('ex-rest').value=ex.rest_time||'';
   document.getElementById('ex-notes').value=ex.notes||'';
+  document.getElementById('edit-preserve-notice').classList.remove('hidden');
+  document.getElementById('multi-day-section').style.display='none';
   openSheet('sh-exercise');
 }
 function saveExercise(e){
@@ -1055,7 +1147,15 @@ function saveExercise(e){
     notes:document.getElementById('ex-notes').value,
   };
   if(editId){DB.updateExercise(editId,data);toast('Exercício atualizado','ok');}
-  else{data.order=DB.getExercises().filter(e=>e.workout_id===wid).length+1;DB.saveExercise(data);toast('Exercício adicionado!','ok');}
+  else{
+    data.order=DB.getExercises().filter(e=>e.workout_id===wid).length+1;
+    DB.saveExercise(data);
+    document.querySelectorAll('.multi-day-cb:checked').forEach(cb=>{
+      const order=DB.getExercises().filter(e=>e.workout_id===cb.value).length+1;
+      DB.saveExercise({workout_id:cb.value,name:data.name,sets:data.sets,reps:data.reps,rest_time:data.rest_time,notes:data.notes,order});
+    });
+    toast('Exercício adicionado!','ok');
+  }
   closeSheet('sh-exercise');
   renderWorkouts();
   // re-open the workout card
@@ -1072,7 +1172,7 @@ function deleteEx(id){
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=90,_restInterval=null;
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=90,_restInterval=null,_wakeLock=null,_restRem=0;
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
@@ -1114,21 +1214,32 @@ function parseRestSecs(str){
 function startRestTimer(secs){
   cancelTimer();
   if(!secs)return;
+  (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
   const el=document.getElementById('rest-timer');
   const cnt=document.getElementById('rest-timer-count');
-  let rem=secs;
-  cnt.textContent=rem+'s';
+  _restRem=secs;
+  cnt.textContent=_restRem+'s';
   el.className='rest-timer';
   _restInterval=setInterval(()=>{
-    rem--;
-    if(rem<=0){
+    _restRem--;
+    if(_restRem<=0){
       clearInterval(_restInterval);_restInterval=null;
       cnt.textContent='Pronto!';
       el.classList.add('done');
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
+      try{
+        const ac=new(window.AudioContext||window.webkitAudioContext)();
+        [0,300,600].forEach(delay=>{
+          const o=ac.createOscillator();const g=ac.createGain();
+          o.connect(g);g.connect(ac.destination);
+          o.frequency.value=880;g.gain.value=0.4;
+          o.start(ac.currentTime+delay/1000);
+          o.stop(ac.currentTime+delay/1000+0.18);
+        });
+      }catch(e){}
       setTimeout(cancelTimer,3000);
     }else{
-      cnt.textContent=rem+'s';
+      cnt.textContent=_restRem+'s';
     }
   },1000);
 }
@@ -1136,6 +1247,12 @@ function startRestTimer(secs){
 function cancelTimer(){
   clearInterval(_restInterval);_restInterval=null;
   document.getElementById('rest-timer').className='rest-timer hidden';
+  if(_wakeLock){_wakeLock.release();_wakeLock=null;}
+}
+
+function adjTimer(delta){
+  _restRem=Math.max(0,_restRem+delta);
+  document.getElementById('rest-timer-count').textContent=_restRem+'s';
 }
 
 function openEditLog(logId){
@@ -1170,6 +1287,7 @@ function openLog(exId){
       :last
         ?`<div class="log-ctx-spec" style="margin-top:4px">Último: ${last.weight}kg · ${last.reps_completed} reps · ${new Date(last.date).toLocaleDateString('pt-BR')}</div>`
         :`<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>`}`;
+  document.getElementById('btn-open-edit-ex').onclick = () => { closeSheet('sh-log'); openEditEx(exId); };
   document.getElementById('log-ex-id').value=exId;
   document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('log-notes').value='';
@@ -1314,6 +1432,40 @@ function clearData(){
   DB.clearAll();
   toast('Dados apagados','warn');
   renderProfile();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// ATIVIDADES
+// ═══════════════════════════════════════════════
+
+let _actDur=30;
+function adjAct(d){
+  _actDur=Math.max(5,_actDur+d);
+  document.getElementById('act-dur-val').textContent=_actDur+' min';
+}
+function quickLogActivity(id,name,icon){
+  _actDur=30;
+  document.getElementById('act-id').value=id;
+  document.getElementById('act-icon').value=icon;
+  document.getElementById('sh-act-title').textContent=icon+' '+name;
+  document.getElementById('act-dur-val').textContent='30 min';
+  document.getElementById('act-notes').value='';
+  openSheet('sh-activity');
+}
+function saveActivity(){
+  const id=document.getElementById('act-id').value;
+  const icon=document.getElementById('act-icon').value;
+  const notes=document.getElementById('act-notes').value;
+  DB.saveLog({
+    exercise_id:'activity_'+id,
+    date:new Date(new Date().toDateString()+'T12:00:00').getTime(),
+    weight:0,
+    reps_completed:_actDur+'min',
+    notes
+  });
+  closeSheet('sh-activity');
+  toast(icon+' Atividade registrada! '+_actDur+' min','ok');
   renderHome();
 }
 
