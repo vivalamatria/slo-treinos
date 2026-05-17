@@ -498,6 +498,16 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
           </div>
           <div class="rep-rows" id="log-rep-rows"></div>
         </div>
+        <div class="fg" style="margin-top:16px">
+          <label class="lbl">Descanso após registro</label>
+          <div class="stepper">
+            <button type="button" class="stepper-btn wide" onclick="adjRestLog(-30)">−30s</button>
+            <button type="button" class="stepper-btn" onclick="adjRestLog(-15)">−15s</button>
+            <span class="stepper-val" id="log-rest-val">60s</span>
+            <button type="button" class="stepper-btn" onclick="adjRestLog(15)">+15s</button>
+            <button type="button" class="stepper-btn wide" onclick="adjRestLog(30)">+30s</button>
+          </div>
+        </div>
         <div class="fg" style="margin-top:16px"><label class="lbl">Observações</label><textarea id="log-notes" class="inp" placeholder="Sensação, técnica, ajustes…"></textarea></div>
         <div style="margin-top:8px;display:flex;gap:10px">
           <button type="button" class="btn ghost full" onclick="closeSheet('sh-log')">Cancelar</button>
@@ -513,7 +523,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 
 <!-- Rest Timer -->
 <div id="rest-timer" class="rest-timer hidden" onclick="cancelTimer()">
-  <span class="rest-timer-label">Descanso</span>
+  <span class="rest-timer-label">Descanso · toque p/ cancelar</span>
   <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(-15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">−15s</button>
   <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">+15s</button>
   <span class="rest-timer-count" id="rest-timer-count">90s</span>
@@ -1172,7 +1182,7 @@ function deleteEx(id){
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=90,_restInterval=null,_wakeLock=null,_restRem=0;
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null;
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
@@ -1211,10 +1221,29 @@ function parseRestSecs(str){
   return m[2][0].toLowerCase()==='m'?parseInt(m[1])*60:parseInt(m[1]);
 }
 
+function getAudioCtx(){
+  if(!_audioCtx){
+    try{_audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  }
+  if(_audioCtx && _audioCtx.state==='suspended'){
+    _audioCtx.resume().catch(()=>{});
+  }
+  return _audioCtx;
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && _restInterval){
+    (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
+  }
+});
+
 function startRestTimer(secs){
   cancelTimer();
   if(!secs)return;
   (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
+  if(Notification && Notification.permission==='default'){
+    Notification.requestPermission().catch(()=>{});
+  }
   const el=document.getElementById('rest-timer');
   const cnt=document.getElementById('rest-timer-count');
   _restRem=secs;
@@ -1227,16 +1256,31 @@ function startRestTimer(secs){
       cnt.textContent='Pronto!';
       el.classList.add('done');
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
-      try{
-        const ac=new(window.AudioContext||window.webkitAudioContext)();
-        [0,300,600].forEach(delay=>{
-          const o=ac.createOscillator();const g=ac.createGain();
-          o.connect(g);g.connect(ac.destination);
-          o.frequency.value=880;g.gain.value=0.4;
-          o.start(ac.currentTime+delay/1000);
-          o.stop(ac.currentTime+delay/1000+0.18);
-        });
-      }catch(e){}
+      const ac=getAudioCtx();
+      if(ac){
+        try{
+          [0,300,600].forEach(delay=>{
+            const o=ac.createOscillator(),g=ac.createGain();
+            o.connect(g);g.connect(ac.destination);
+            o.frequency.value=880;g.gain.value=0.35;
+            const t=ac.currentTime+delay/1000;
+            o.start(t);o.stop(t+0.18);
+          });
+        }catch(e){}
+      }
+      if(Notification && Notification.permission==='granted'){
+        try{
+          const n=new Notification('Descanso concluído! ✓',{
+            body:'Hora do próximo exercício 💪',
+            icon:'/slo_laranja@2x.png',
+            vibrate:[200,100,200],
+            tag:'slo-timer',
+            renotify:true,
+            silent:false
+          });
+          setTimeout(()=>n.close(),4000);
+        }catch(e){}
+      }
       setTimeout(cancelTimer,3000);
     }else{
       cnt.textContent=_restRem+'s';
@@ -1253,6 +1297,11 @@ function cancelTimer(){
 function adjTimer(delta){
   _restRem=Math.max(0,_restRem+delta);
   document.getElementById('rest-timer-count').textContent=_restRem+'s';
+}
+
+function adjRestLog(d){
+  _restSecs=Math.max(0,_restSecs+d);
+  document.getElementById('log-rest-val').textContent=_restSecs+'s';
 }
 
 function openEditLog(logId){
@@ -1275,6 +1324,9 @@ function openLog(exId){
   if(!ex)return;
   _editingLogId=null;
   _restSecs=parseRestSecs(ex.rest_time);
+  if(!_restSecs)_restSecs=60;
+  const restEl=document.getElementById('log-rest-val');
+  if(restEl)restEl.textContent=_restSecs+'s';
   const logs=DB.getLogs().filter(l=>l.exercise_id===exId).sort((a,b)=>b.date-a.date);
   const last=logs[0];
   const todayStr=new Date().toDateString();
@@ -1476,6 +1528,8 @@ function saveActivity(){
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('meso-start').value=new Date().toISOString().split('T')[0];
   renderHome();
+  document.addEventListener('touchstart',()=>getAudioCtx(),{once:true,passive:true});
+  document.addEventListener('click',()=>getAudioCtx(),{once:true});
 });
 </script>
 </body>
