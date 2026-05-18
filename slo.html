@@ -1173,7 +1173,7 @@ function deleteEx(id){
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null;
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null,_seriesChecked=new Set();
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
@@ -1201,8 +1201,17 @@ function renderRepRows(){
       <button type="button" class="stepper-btn" onclick="adjR(${i},-1)" style="min-width:36px;height:36px">−</button>
       <span class="rep-sval">${v}</span>
       <button type="button" class="stepper-btn" onclick="adjR(${i},1)" style="min-width:36px;height:36px">+</button>
+      <button type="button" class="ibtn log${_seriesChecked.has(i)?' logged':''}" onclick="checkSeries(${i})" title="Série concluída">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
     </div>`
   ).join('');
+}
+
+function checkSeries(i){
+  if(_seriesChecked.has(i)){_seriesChecked.delete(i);}
+  else{_seriesChecked.add(i);startRestTimer(_restSecs);}
+  renderRepRows();
 }
 
 function parseRestSecs(str){
@@ -1314,6 +1323,7 @@ function openLog(exId){
   const ex=DB.getExercises().find(e=>e.id===exId);
   if(!ex)return;
   _editingLogId=null;
+  _seriesChecked=new Set();
   _restSecs=parseRestSecs(ex.rest_time);
   if(!_restSecs)_restSecs=60;
   const restEl=document.getElementById('log-rest-val');
