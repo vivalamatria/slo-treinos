@@ -484,6 +484,13 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
       <div style="text-align:right;margin:-4px 0 8px">
         <button type="button" class="btn-edit-log" id="btn-open-edit-ex" onclick="">Editar exercício</button>
       </div>
+      <div id="log-inline-timer" class="hidden" style="background:var(--ink);border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;transition:background .3s">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Descanso</div>
+          <div id="log-inline-label" style="font-size:13px;color:rgba(255,255,255,.45)">próxima série</div>
+        </div>
+        <span id="log-inline-count" style="font-size:48px;font-weight:900;color:white;letter-spacing:-.04em;flex-shrink:0">90s</span>
+      </div>
       <form onsubmit="saveLog(event)">
         <input type="hidden" id="log-ex-id">
         <input type="hidden" id="log-date">
@@ -506,14 +513,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
           </div>
           <div class="rep-rows" id="log-rep-rows"></div>
         </div>
-        <div id="log-inline-timer" class="hidden" style="background:var(--ink);border-radius:12px;padding:14px 16px;margin:4px 0 16px;display:flex;align-items:center;gap:14px;transition:background .3s">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Descanso</div>
-            <div id="log-inline-label" style="font-size:12px;color:rgba(255,255,255,.4)">próxima série</div>
-          </div>
-          <span id="log-inline-count" style="font-size:44px;font-weight:900;color:white;letter-spacing:-.04em;flex-shrink:0">90s</span>
-        </div>
-        <div class="fg" style="margin-top:0">
+        <div class="fg" style="margin-top:16px">
           <label class="lbl">Descanso (segundos)</label>
           <div class="stepper">
             <button type="button" class="stepper-btn wide" onclick="adjRestLog(-30)">−30s</button>
@@ -1177,7 +1177,7 @@ function deleteEx(id){
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null,_seriesChecked=new Set(),_inlineInterval=null,_inlineRem=0;
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null,_seriesChecked=new Set(),_inlineInterval=null,_inlineRem=0,_hideTimerT=null;
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
@@ -1220,6 +1220,7 @@ function checkSeries(i){
 
 function startInlineTimer(secs){
   clearInterval(_inlineInterval);_inlineInterval=null;
+  if(_hideTimerT){clearTimeout(_hideTimerT);_hideTimerT=null;}
   if(!secs)return;
   const box=document.getElementById('log-inline-timer');
   const cnt=document.getElementById('log-inline-count');
@@ -1227,9 +1228,11 @@ function startInlineTimer(secs){
   if(!box||!cnt)return;
   _inlineRem=secs;
   cnt.textContent=_inlineRem+'s';
+  cnt.style.fontSize='48px';
   if(lbl)lbl.textContent='próxima série';
   box.style.background='var(--ink)';
   box.classList.remove('hidden');
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
   (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
   if(Notification&&Notification.permission==='default')Notification.requestPermission().catch(()=>{});
   _inlineInterval=setInterval(()=>{
@@ -1237,13 +1240,14 @@ function startInlineTimer(secs){
     if(_inlineRem<=0){
       clearInterval(_inlineInterval);_inlineInterval=null;
       cnt.textContent='Pronto!';
+      cnt.style.fontSize='28px';
       if(lbl)lbl.textContent='pode iniciar a próxima série';
       box.style.background='var(--green)';
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
       const ac=getAudioCtx();
       if(ac){try{[0,300,600].forEach(d=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.35;const t=ac.currentTime+d/1000;o.start(t);o.stop(t+0.18);});}catch(e){}}
       if(Notification&&Notification.permission==='granted'){try{const n=new Notification('Descanso concluído! ✓',{body:'Hora da próxima série 💪',icon:'/slo_laranja@2x.png',tag:'slo-timer',renotify:true,silent:false});setTimeout(()=>n.close(),4000);}catch(e){}}
-      setTimeout(()=>{box.classList.add('hidden');box.style.background='';},3500);
+      // mantém "Pronto!" visível — some ao iniciar próxima série ou ao salvar
     }else{
       cnt.textContent=_inlineRem+'s';
     }
@@ -1361,6 +1365,7 @@ function openLog(exId){
   _editingLogId=null;
   _seriesChecked=new Set();
   clearInterval(_inlineInterval);_inlineInterval=null;
+  if(_hideTimerT){clearTimeout(_hideTimerT);_hideTimerT=null;}
   const _ilt=document.getElementById('log-inline-timer');
   if(_ilt){_ilt.classList.add('hidden');_ilt.style.background='';}
   _restSecs=parseRestSecs(ex.rest_time);
