@@ -295,11 +295,10 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 <body>
 
 <!-- ─── HEADER ────────────────────────────────── -->
-<header class="hdr">
+<header class="hdr" style="justify-content:center">
   <div class="hdr-logo">
     <img src="slo_laranja@2x.png" alt="SLO" class="hdr-logo-img">
   </div>
-  <span class="hdr-subtitle" id="hdr-sub">Seu treino</span>
 </header>
 
 <!-- ─── SCROLL ────────────────────────────────── -->
@@ -720,7 +719,7 @@ function toast(msg,type=''){
 // NAVIGATION
 // ═══════════════════════════════════════════════
 
-const SUBTITLES={home:'Seu treino',workouts:'Exercícios',progress:'Evolução',profile:'Perfil'};
+const SUBTITLES={};
 const DAY_PT=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
 function goTo(sec){
@@ -729,7 +728,6 @@ function goTo(sec){
     b.classList.toggle('on',b.dataset.sec===sec);
   });
   document.getElementById('sec-'+sec).classList.add('on');
-  document.getElementById('hdr-sub').textContent=SUBTITLES[sec]||'SLO';
   document.getElementById('scroll').scrollTo(0,0);
   if(sec==='home')renderHome();
   else if(sec==='workouts')renderWorkouts();
