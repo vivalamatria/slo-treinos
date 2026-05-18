@@ -276,6 +276,14 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 .activity-chip{background:var(--white);border:1.5px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);transition:border-color .15s,color .15s}
 .activity-chip:active{border-color:var(--amber);color:var(--amber-dark)}
 
+/* ── ACTIVITY FORM PILLS ─────────────────────── */
+.act-pills{display:flex;flex-wrap:wrap;gap:6px}
+.act-pills .mode-pill{flex:0 1 auto;min-width:68px;margin-bottom:0}
+.act-calc-box{background:var(--amber-light);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:6px}
+.act-calc-row{display:flex;justify-content:space-between;align-items:center}
+.act-calc-lbl{font-size:12px;font-weight:600;color:var(--amber-dark)}
+.act-calc-val{font-size:14px;font-weight:800;color:var(--amber-dark)}
+
 @media(min-width:600px){
   .scroll>*,.sec{max-width:560px;margin-left:auto;margin-right:auto}
   .overlay{align-items:center}
@@ -539,25 +547,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="sheet-body">
-      <input type="hidden" id="act-id">
-      <input type="hidden" id="act-icon">
-      <div class="fg">
-        <label class="lbl">Duração</label>
-        <div class="stepper">
-          <button type="button" class="stepper-btn wide" onclick="adjAct(-10)">−10</button>
-          <button type="button" class="stepper-btn" onclick="adjAct(-5)">−5</button>
-          <span class="stepper-val" id="act-dur-val">30 min</span>
-          <button type="button" class="stepper-btn" onclick="adjAct(5)">+5</button>
-          <button type="button" class="stepper-btn wide" onclick="adjAct(10)">+10</button>
-        </div>
-      </div>
-      <div class="fg"><label class="lbl">Observações</label><textarea id="act-notes" class="inp" placeholder="Como foi?"></textarea></div>
-      <div style="display:flex;gap:10px;margin-top:8px">
-        <button type="button" class="btn ghost full" onclick="closeSheet('sh-activity')">Cancelar</button>
-        <button type="button" class="btn primary full" onclick="saveActivity()">Registrar</button>
-      </div>
-    </div>
+    <div class="sheet-body" id="act-form-body"></div>
   </div>
 </div>
 
@@ -574,6 +564,7 @@ const ACTIVITIES=[
   {id:'pilates',    name:'Pilates',      icon:'🏋️'},
   {id:'alongamento',name:'Alongamento',  icon:'🤸'},
   {id:'meditacao',  name:'Meditação',    icon:'🧘'},
+  {id:'escada',     name:'Escada',       icon:'🪜'},
 ];
 
 const MESO_A = {
@@ -1491,33 +1482,317 @@ function clearData(){
 // ATIVIDADES
 // ═══════════════════════════════════════════════
 
-let _actDur=30;
+const INTENSIDADE=['Leve','Moderada','Forte','Máxima'];
+
+const ACT_CFG={
+  caminhada:{
+    subtypes:['Esteira','Outdoor'],
+    bySubtype:{
+      Esteira:{
+        fields:[
+          {id:'velocity',label:'Velocidade média',unit:'km/h',step:'0.1',min:'0'},
+          {id:'incline', label:'Inclinação',       unit:'%',   step:'0.5',min:'0'},
+        ],
+        calcFields:[{id:'dist',label:'Distância estimada',calc:(f,m)=>{const v=parseFloat(f.velocity||0);return v?(v*m/60).toFixed(2)+' km':'—'}}],
+      },
+      Outdoor:{
+        fields:[
+          {id:'distance',label:'Distância',unit:'km',step:'0.1',min:'0'},
+          {id:'terrain', label:'Terreno',   type:'pills',options:['Plano','Subida','Misto','Areia','Trilha','Calçada/rua']},
+        ],
+        calcFields:[{id:'pace',label:'Ritmo médio',calc:(f,m)=>{const d=parseFloat(f.distance||0);if(!d)return'—';const t=m/d;const mn=Math.floor(t);const s=Math.round((t-mn)*60);return`${mn}:${String(s).padStart(2,'0')} min/km`}}],
+      },
+    },
+    hasIntensity:true,
+  },
+  corrida:{
+    subtypes:['Esteira','Outdoor'],
+    bySubtype:{
+      Esteira:{
+        fields:[
+          {id:'velocity',  label:'Velocidade média',unit:'km/h',step:'0.1',min:'0'},
+          {id:'incline',   label:'Inclinação',       unit:'%',   step:'0.5',min:'0'},
+          {id:'trainType', label:'Tipo de treino',   type:'pills',options:['Leve','Intervalado','Tiro','Progressivo','Longão','Regenerativo']},
+        ],
+        calcFields:[{id:'dist',label:'Distância estimada',calc:(f,m)=>{const v=parseFloat(f.velocity||0);return v?(v*m/60).toFixed(2)+' km':'—'}}],
+      },
+      Outdoor:{
+        fields:[
+          {id:'distance',  label:'Distância',      unit:'km', step:'0.1',min:'0'},
+          {id:'terrain',   label:'Terreno',         type:'pills',options:['Rua','Calçada','Areia','Trilha','Plano','Subida','Misto']},
+          {id:'trainType', label:'Tipo de treino',  type:'pills',options:['Leve','Intervalado','Tiro','Progressivo','Longão','Regenerativo']},
+        ],
+        calcFields:[{id:'pace',label:'Ritmo médio',calc:(f,m)=>{const d=parseFloat(f.distance||0);if(!d)return'—';const t=m/d;const mn=Math.floor(t);const s=Math.round((t-mn)*60);return`${mn}:${String(s).padStart(2,'0')} min/km`}}],
+      },
+    },
+    hasIntensity:true,
+  },
+  natacao:{
+    subtypes:['Piscina','Mar'],
+    bySubtype:{
+      Piscina:{
+        fields:[
+          {id:'poolSize', label:'Tamanho da piscina', type:'pills',options:['25m','50m']},
+          {id:'distance', label:'Distância',           unit:'m',step:'50',min:'0'},
+          {id:'style',    label:'Estilo',              type:'pills',options:['Livre','Costas','Peito','Borboleta','Medley']},
+        ],
+        calcFields:[{id:'pace100',label:'Ritmo/100m',calc:(f,m)=>{const d=parseFloat(f.distance||0);if(!d)return'—';const t=m/(d/100);const mn=Math.floor(t);const s=Math.round((t-mn)*60);return`${mn}:${String(s).padStart(2,'0')} min/100m`}}],
+      },
+      Mar:{
+        fields:[
+          {id:'distance',    label:'Distância',      unit:'m',step:'50',min:'0'},
+          {id:'style',       label:'Estilo',         type:'pills',options:['Livre','Costas','Peito','Borboleta','Medley']},
+          {id:'seaCondition',label:'Condição do mar', type:'pills',options:['Calmo','Moderado','Mexido']},
+        ],
+        calcFields:[{id:'pace100',label:'Ritmo/100m',calc:(f,m)=>{const d=parseFloat(f.distance||0);if(!d)return'—';const t=m/(d/100);const mn=Math.floor(t);const s=Math.round((t-mn)*60);return`${mn}:${String(s).padStart(2,'0')} min/100m`}}],
+      },
+    },
+    hasIntensity:true,
+  },
+  pilates:{
+    fields:[
+      {id:'type',  label:'Tipo',           type:'pills',     options:['Solo','Aparelhos','Online','Presencial']},
+      {id:'focus', label:'Foco da sessão', type:'pills-multi',options:['Core','Mobilidade','Postura','Força','Reabilitação','Corpo todo']},
+    ],
+    hasIntensity:true,
+  },
+  alongamento:{
+    fields:[
+      {id:'region',label:'Região trabalhada',type:'pills-multi',options:['Corpo todo','Coluna','Pernas','Quadril','Ombros','Cervical']},
+      {id:'goal',  label:'Objetivo',         type:'pills',     options:['Recuperação','Relaxamento','Mobilidade','Aquecimento']},
+    ],
+    hasIntensity:false,
+  },
+  meditacao:{
+    fields:[
+      {id:'type',      label:'Tipo/Foco',    type:'pills',options:['Respiração','Mindfulness','Relaxamento','Sono','Foco','Livre','Guiada']},
+      {id:'moodBefore',label:'Humor antes',  type:'pills',options:['😟 Ansioso','😐 Neutro','🙂 Bem','😊 Ótimo']},
+      {id:'moodAfter', label:'Humor depois', type:'pills',options:['😟 Ansioso','😐 Neutro','🙂 Bem','😊 Ótimo']},
+    ],
+    hasIntensity:false,
+  },
+  escada:{
+    subtypes:['Prédio','Máquina'],
+    bySubtype:{
+      Prédio:{
+        fields:[
+          {id:'floors',label:'Andares',unit:'andares',step:'1',min:'0'},
+        ],
+        calcFields:[{id:'rate',label:'Ritmo',calc:(f,m)=>{const fl=parseFloat(f.floors||0);return(fl&&m)?(fl/m).toFixed(1)+' andares/min':'—'}}],
+      },
+      Máquina:{
+        fields:[
+          {id:'level',label:'Nível/Carga',step:'1',min:'1',max:'20'},
+          {id:'steps',label:'Passos simulados',step:'10',min:'0'},
+        ],
+        calcFields:[],
+      },
+    },
+    hasIntensity:true,
+  },
+  pedal:{
+    subtypes:['Outdoor','Ergométrica','Spinning'],
+    bySubtype:{
+      Outdoor:{
+        fields:[
+          {id:'distance',label:'Distância',unit:'km',step:'0.5',min:'0'},
+          {id:'terrain', label:'Terreno',   type:'pills',options:['Plano','Subida','Misto','Trilha','Urbano']},
+        ],
+        calcFields:[{id:'speed',label:'Velocidade média',calc:(f,m)=>{const d=parseFloat(f.distance||0);return(d&&m)?(d/(m/60)).toFixed(1)+' km/h':'—'}}],
+      },
+      Ergométrica:{
+        fields:[
+          {id:'resistance',label:'Carga/Resistência',step:'1',min:'1'},
+          {id:'distance',  label:'Distância estimada',unit:'km',step:'0.5',min:'0'},
+        ],
+        calcFields:[],
+      },
+      Spinning:{
+        fields:[
+          {id:'resistance',label:'Carga/Resistência',step:'1',min:'1'},
+          {id:'distance',  label:'Distância estimada',unit:'km',step:'0.5',min:'0'},
+          {id:'cadence',   label:'Cadência',unit:'rpm',step:'5',min:'0'},
+        ],
+        calcFields:[],
+      },
+    },
+    hasIntensity:true,
+  },
+};
+
+const ACT_SUBTYPE_MSGS={
+  caminhada:'Escolha se a caminhada foi na esteira ou outdoor.',
+  corrida:'Escolha se a corrida foi na esteira ou outdoor.',
+  natacao:'Escolha se a natação foi na piscina ou no mar.',
+  escada:'Escolha se a escada foi em prédio ou na máquina.',
+  pedal:'Escolha o tipo de pedal: outdoor, ergométrica ou spinning.',
+};
+
+let _actState={id:'',name:'',icon:'',duration:30,subtype:null,fields:{},multiFields:{},intensity:null};
+
 function adjAct(d){
-  _actDur=Math.max(5,_actDur+d);
-  document.getElementById('act-dur-val').textContent=_actDur+' min';
+  _actState.duration=Math.max(5,_actState.duration+d);
+  document.getElementById('act-dur-val').textContent=_actState.duration+' min';
+  _updateActCalc();
 }
+
+function _getActCfg(){
+  const base=ACT_CFG[_actState.id];
+  if(!base)return null;
+  if(base.subtypes)return _actState.subtype?base.bySubtype[_actState.subtype]:null;
+  return base;
+}
+
+function _updateActCalc(){
+  const cfg=_getActCfg();
+  if(!cfg||!cfg.calcFields)return;
+  cfg.calcFields.forEach(cf=>{
+    const el=document.getElementById('act-calc-'+cf.id);
+    if(el)el.textContent=cf.calc(_actState.fields,_actState.duration);
+  });
+}
+
+function _setActPill(fieldId,val,el){
+  _actState.fields[fieldId]=val;
+  el.closest('.act-pills').querySelectorAll('.mode-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  _updateActCalc();
+}
+
+function _toggleActMulti(fieldId,val,el){
+  if(!_actState.multiFields[fieldId])_actState.multiFields[fieldId]=[];
+  const arr=_actState.multiFields[fieldId];
+  const i=arr.indexOf(val);
+  if(i>-1){arr.splice(i,1);el.classList.remove('on');}
+  else{arr.push(val);el.classList.add('on');}
+}
+
+function _setActIntensity(val,el){
+  _actState.intensity=val;
+  el.closest('.act-pills').querySelectorAll('.mode-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function _buildFieldsHtml(cfg){
+  if(!cfg)return`<div style="text-align:center;padding:10px 0 4px;color:var(--ink-4);font-size:13px">Selecione o tipo acima</div>`;
+  let html='';
+  cfg.fields.forEach(f=>{
+    if(f.type==='pills'){
+      html+=`<div class="fg"><label class="lbl">${f.label}</label><div class="act-pills">
+        ${f.options.map(o=>`<button type="button" class="mode-pill" data-v="${esc(o)}" onclick="_setActPill('${f.id}',this.dataset.v,this)">${esc(o)}</button>`).join('')}
+      </div></div>`;
+    }else if(f.type==='pills-multi'){
+      html+=`<div class="fg"><label class="lbl">${f.label}</label><div class="act-pills">
+        ${f.options.map(o=>`<button type="button" class="mode-pill" data-v="${esc(o)}" onclick="_toggleActMulti('${f.id}',this.dataset.v,this)">${esc(o)}</button>`).join('')}
+      </div></div>`;
+    }else{
+      html+=`<div class="fg"><label class="lbl">${f.label}${f.unit?` (${f.unit})`:''}</label>
+        <input type="number" inputmode="decimal" class="inp" step="${f.step||'1'}" min="${f.min||'0'}"${f.max?` max="${f.max}"`:''}
+          placeholder="0" oninput="_actState.fields['${f.id}']=parseFloat(this.value)||0;_updateActCalc()"></div>`;
+    }
+  });
+  if(cfg.calcFields&&cfg.calcFields.length){
+    html+=`<div class="act-calc-box">
+      ${cfg.calcFields.map(cf=>`<div class="act-calc-row">
+        <span class="act-calc-lbl">${cf.label}</span>
+        <span class="act-calc-val" id="act-calc-${cf.id}">—</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  return html;
+}
+
+function switchActSubtype(st){
+  _actState.subtype=st;
+  _actState.fields={};
+  _actState.multiFields={};
+  document.querySelectorAll('.act-sub-pill').forEach(p=>p.classList.toggle('on',p.dataset.st===st));
+  document.getElementById('act-dyn-fields').innerHTML=_buildFieldsHtml(ACT_CFG[_actState.id].bySubtype[st]);
+}
+
 function quickLogActivity(id,name,icon){
-  _actDur=30;
-  document.getElementById('act-id').value=id;
-  document.getElementById('act-icon').value=icon;
+  const base=ACT_CFG[id];
+  _actState={id,name,icon,duration:30,subtype:null,fields:{},multiFields:{},intensity:null};
   document.getElementById('sh-act-title').textContent=icon+' '+name;
-  document.getElementById('act-dur-val').textContent='30 min';
-  document.getElementById('act-notes').value='';
+
+  let html=`<div class="fg"><label class="lbl">Duração</label>
+    <div class="stepper">
+      <button type="button" class="stepper-btn wide" onclick="adjAct(-10)">−10</button>
+      <button type="button" class="stepper-btn" onclick="adjAct(-5)">−5</button>
+      <span class="stepper-val" id="act-dur-val">30 min</span>
+      <button type="button" class="stepper-btn" onclick="adjAct(5)">+5</button>
+      <button type="button" class="stepper-btn wide" onclick="adjAct(10)">+10</button>
+    </div></div>`;
+
+  if(base&&base.subtypes){
+    html+=`<div class="fg"><label class="lbl">Tipo</label>
+      <div class="act-pills">
+        ${base.subtypes.map(st=>`<button type="button" class="mode-pill act-sub-pill" data-st="${esc(st)}" onclick="switchActSubtype(this.dataset.st)">${esc(st)}</button>`).join('')}
+      </div></div>
+    <div id="act-dyn-fields">${_buildFieldsHtml(null)}</div>`;
+  }else if(base&&base.fields){
+    html+=`<div id="act-dyn-fields">${_buildFieldsHtml(base)}</div>`;
+  }
+
+  if(base&&base.hasIntensity){
+    html+=`<div class="fg"><label class="lbl">Intensidade</label>
+      <div class="act-pills">
+        ${INTENSIDADE.map(i=>`<button type="button" class="mode-pill" data-v="${esc(i)}" onclick="_setActIntensity(this.dataset.v,this)">${esc(i)}</button>`).join('')}
+      </div></div>`;
+  }
+
+  html+=`<div class="fg"><label class="lbl">Observações</label><textarea id="act-notes" class="inp" placeholder="Como foi?"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button type="button" class="btn ghost full" onclick="closeSheet('sh-activity')">Cancelar</button>
+      <button type="button" class="btn primary full" onclick="saveActivity()">Registrar</button>
+    </div>`;
+
+  document.getElementById('act-form-body').innerHTML=html;
   openSheet('sh-activity');
 }
+
+function _buildActSummary(){
+  const {id,name,duration,subtype,fields,multiFields,intensity}=_actState;
+  let parts=[name+' '+duration+'min'];
+  if(subtype)parts.push(subtype.toLowerCase());
+  if(fields.distance){const u=(id==='natacao')?'m':'km';parts.push(fields.distance+u);}
+  if(fields.velocity)parts.push(fields.velocity+'km/h');
+  if(fields.incline)parts.push(fields.incline+'%');
+  if(fields.terrain)parts.push(fields.terrain.toLowerCase());
+  if(fields.style)parts.push(fields.style.toLowerCase());
+  if(fields.trainType)parts.push(fields.trainType.toLowerCase());
+  if(fields.type)parts.push(fields.type.toLowerCase());
+  if(multiFields.focus&&multiFields.focus.length)parts.push(multiFields.focus.join('+'));
+  if(multiFields.region&&multiFields.region.length)parts.push(multiFields.region.join('+'));
+  if(fields.goal)parts.push(fields.goal.toLowerCase());
+  if(fields.floors)parts.push(fields.floors+' andares');
+  if(fields.level)parts.push('nível '+fields.level);
+  if(fields.resistance)parts.push('carga '+fields.resistance);
+  if(fields.poolSize)parts.push(fields.poolSize);
+  if(fields.seaCondition)parts.push(fields.seaCondition.toLowerCase());
+  if(fields.moodBefore&&fields.moodAfter)parts.push(fields.moodBefore+'→'+fields.moodAfter);
+  if(intensity)parts.push(intensity.toLowerCase());
+  return parts.join(' · ');
+}
+
 function saveActivity(){
-  const id=document.getElementById('act-id').value;
-  const icon=document.getElementById('act-icon').value;
-  const notes=document.getElementById('act-notes').value;
+  const base=ACT_CFG[_actState.id];
+  if(base&&base.subtypes&&!_actState.subtype){
+    toast(ACT_SUBTYPE_MSGS[_actState.id]||'Escolha o tipo antes de salvar.','err');
+    return;
+  }
+  const summary=_buildActSummary();
   DB.saveLog({
-    exercise_id:'activity_'+id,
+    exercise_id:'activity_'+_actState.id,
     date:new Date(new Date().toDateString()+'T12:00:00').getTime(),
     weight:0,
-    reps_completed:_actDur+'min',
-    notes
+    sets_completed:0,
+    reps_completed:_actState.duration+'min',
+    notes:document.getElementById('act-notes').value,
+    activity_data:{..._actState,summary}
   });
   closeSheet('sh-activity');
-  toast(icon+' Atividade registrada! '+_actDur+' min','ok');
+  toast(_actState.icon+' '+_actState.name+' — '+_actState.duration+' min registrado!','ok');
   renderHome();
 }
 
