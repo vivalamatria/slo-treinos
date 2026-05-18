@@ -1014,7 +1014,7 @@ function renderWkCard(wk,exercises){
           const exLogs=logs.filter(l=>l.exercise_id===ex.id).sort((a,b)=>b.date-a.date);
           const lastLog=exLogs[0];
           const loggedToday=exLogs.some(l=>new Date(l.date).toDateString()===todayStr);
-          return`<div class="ex-item">
+          return`<div class="ex-item" onclick="openLog('${ex.id}')" style="cursor:pointer">
             <div>
               <div class="ex-name">${esc(ex.name)}</div>
               <div class="ex-spec">${esc(ex.sets)}× ${esc(ex.reps)}${ex.rest_time?' · '+esc(ex.rest_time):''}</div>
@@ -1022,13 +1022,10 @@ function renderWkCard(wk,exercises){
               ${lastLog?`<div class="ex-spec" style="color:var(--amber-dark);margin-top:2px">Último: ${lastLog.weight}kg · ${new Date(lastLog.date).toLocaleDateString('pt-BR')}</div>`:''}
             </div>
             <div class="ex-actions">
-              <button class="ibtn log${loggedToday?' logged':''}" title="Registrar" onclick="openLog('${ex.id}')">
+              <div class="ibtn log${loggedToday?' logged':''}">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              </button>
-              <button class="ibtn" title="Iniciar descanso" onclick="startRestTimer(parseRestSecs('${esc(ex.rest_time||'90s')}'))">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </button>
-              <button class="ibtn del" title="Excluir" onclick="deleteEx('${ex.id}')">
+              </div>
+              <button class="ibtn del" title="Excluir" onclick="event.stopPropagation();deleteEx('${ex.id}')">
                 <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </div>
