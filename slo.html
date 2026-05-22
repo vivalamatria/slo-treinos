@@ -448,6 +448,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
         <div class="fg"><label class="lbl">Repetições</label><input id="ex-reps" class="inp" required placeholder="8-12"></div>
       </div>
       <div class="fg"><label class="lbl">Descanso</label><input id="ex-rest" class="inp" placeholder="90 ou 90s"></div>
+      <div class="fg"><label class="lbl">Exercício equivalente</label><input id="ex-equivalent" class="inp" placeholder="Ex: Supino na Máquina"></div>
       <div class="fg"><label class="lbl">Observações</label><textarea id="ex-notes" class="inp" placeholder="Técnica, variações, dicas…"></textarea></div>
       <div class="fg" id="multi-day-section" style="display:none">
         <label class="lbl">Adicionar também em</label>
@@ -1088,6 +1089,7 @@ function openAddEx(workoutId){
   document.getElementById('ex-reps').value='';
   document.getElementById('ex-rest').value='';
   document.getElementById('ex-notes').value='';
+  document.getElementById('ex-equivalent').value='';
   document.getElementById('edit-preserve-notice').classList.add('hidden');
   const wk=DB.getWorkouts().find(w=>w.id===workoutId);
   const others=wk?DB.getWorkouts().filter(w=>w.mesocycle_id===wk.mesocycle_id && w.id!==workoutId):[];
@@ -1117,6 +1119,7 @@ function openEditEx(id){
   document.getElementById('ex-reps').value=ex.reps||'';
   document.getElementById('ex-rest').value=ex.rest_time||'';
   document.getElementById('ex-notes').value=ex.notes||'';
+  document.getElementById('ex-equivalent').value=ex.equivalent_name||'';
   document.getElementById('edit-preserve-notice').classList.remove('hidden');
   document.getElementById('multi-day-section').style.display='none';
   openSheet('sh-exercise');
@@ -1132,6 +1135,7 @@ function saveExercise(e){
     reps:document.getElementById('ex-reps').value,
     rest_time:document.getElementById('ex-rest').value,
     notes:document.getElementById('ex-notes').value,
+    equivalent_name:document.getElementById('ex-equivalent').value,
   };
   if(editId){DB.updateExercise(editId,data);toast('Exercício atualizado','ok');}
   else{
