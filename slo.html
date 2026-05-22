@@ -1876,7 +1876,7 @@ function saveActivity(){
   const summary=_buildActSummary();
   DB.saveLog({
     exercise_id:'activity_'+_actState.id,
-    date:new Date(new Date().toDateString()+'T12:00:00').getTime(),
+    date:new Date(new Date().toISOString().split('T')[0]+'T12:00:00').getTime(),
     weight:0,
     sets_completed:0,
     reps_completed:_actState.duration+'min',
@@ -1893,6 +1893,18 @@ function saveActivity(){
 // ═══════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded',()=>{
+  // Migrate activity logs with NaN dates (bug: toDateString() produced invalid ISO)
+  (()=>{
+    const logs=DB.getLogs();
+    const today=new Date(new Date().toISOString().split('T')[0]+'T12:00:00').getTime();
+    let fixed=false;
+    logs.forEach(l=>{
+      if(l.exercise_id&&l.exercise_id.startsWith('activity_')&&isNaN(l.date)){
+        l.date=today;fixed=true;
+      }
+    });
+    if(fixed)set(K.logs,logs);
+  })();
   document.getElementById('meso-start').value=new Date().toISOString().split('T')[0];
   renderHome();
   document.addEventListener('touchstart',()=>getAudioCtx(),{once:true,passive:true});
