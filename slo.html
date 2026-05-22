@@ -1258,7 +1258,7 @@ function playTimerSound(){
 }
 
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible' && _restInterval){
+  if(document.visibilityState==='visible' && _inlineInterval){
     (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
   }
 });
