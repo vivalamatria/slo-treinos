@@ -1143,7 +1143,7 @@ function saveExercise(e){
     DB.saveExercise(data);
     document.querySelectorAll('.multi-day-cb:checked').forEach(cb=>{
       const order=DB.getExercises().filter(e=>e.workout_id===cb.value).length+1;
-      DB.saveExercise({workout_id:cb.value,name:data.name,sets:data.sets,reps:data.reps,rest_time:data.rest_time,notes:data.notes,order});
+      DB.saveExercise({workout_id:cb.value,name:data.name,sets:data.sets,reps:data.reps,rest_time:data.rest_time,notes:data.notes,equivalent_name:data.equivalent_name,order});
     });
     toast('Exercício adicionado!','ok');
   }
