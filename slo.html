@@ -1172,14 +1172,14 @@ function swapEquivalent(id){
   if(!ex||!ex.equivalent_name)return;
   DB.updateExercise(id,{name:ex.equivalent_name,equivalent_name:ex.name});
   renderWorkouts();
-  toast('Trocado: '+esc(ex.equivalent_name),'ok');
+  toast('Trocado: '+ex.equivalent_name,'ok');
 }
 
 // ═══════════════════════════════════════════════
 // LOG
 // ═══════════════════════════════════════════════
 
-let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_restInterval=null,_wakeLock=null,_restRem=0,_audioCtx=null,_seriesChecked=new Set(),_inlineInterval=null,_inlineRem=0,_hideTimerT=null;
+let _w=0,_reps=[],_repMode='equal',_editingLogId=null,_restSecs=60,_wakeLock=null,_audioCtx=null,_seriesChecked=new Set(),_inlineInterval=null,_inlineRem=0,_hideTimerT=null;
 
 function adjW(d){
   _w=Math.round(Math.max(0,_w+d)*10)/10;
