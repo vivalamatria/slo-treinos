@@ -248,13 +248,6 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 .rep-row-lbl{font-size:12px;font-weight:600;color:var(--ink-3);width:54px;flex-shrink:0}
 .rep-sval{font-size:18px;font-weight:800;color:var(--ink);min-width:36px;text-align:center}
 
-/* ── REST TIMER ──────────────────────────────── */
-.rest-timer{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom));left:12px;right:12px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:150;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;cursor:pointer}
-.rest-timer.hidden{opacity:0;pointer-events:none;transform:translateY(10px)}
-.rest-timer.done{background:var(--green)}
-.rest-timer-label{font-size:11px;font-weight:700;flex:1;opacity:.7;letter-spacing:.06em;text-transform:uppercase}
-.rest-timer-count{font-size:28px;font-weight:900;letter-spacing:-.04em;min-width:56px;text-align:right}
-.rest-timer-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .btn-edit-log{background:rgba(184,120,36,.12);border:1.5px solid var(--amber);color:var(--amber-dark);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
 
 /* ── LOG CONTEXT ─────────────────────────────── */
@@ -534,15 +527,6 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 
 <!-- Toast -->
 <div id="toast"></div>
-
-<!-- Rest Timer -->
-<div id="rest-timer" class="rest-timer hidden" onclick="cancelTimer()">
-  <span class="rest-timer-label">Descanso · toque p/ cancelar</span>
-  <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(-15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">−15s</button>
-  <button class="rest-timer-close" onclick="event.stopPropagation();adjTimer(15)" style="width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700">+15s</button>
-  <span class="rest-timer-count" id="rest-timer-count">90s</span>
-  <button class="rest-timer-close" onclick="cancelTimer()">✕</button>
-</div>
 
 <!-- Atividade -->
 <div class="overlay" id="sh-activity" onclick="overlayClick(event,'sh-activity')">
@@ -1279,67 +1263,6 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
-function startRestTimer(secs){
-  cancelTimer();
-  if(!secs)return;
-  (async()=>{try{_wakeLock=await navigator.wakeLock.request('screen');}catch(e){}})();
-  if(Notification && Notification.permission==='default'){
-    Notification.requestPermission().catch(()=>{});
-  }
-  const el=document.getElementById('rest-timer');
-  const cnt=document.getElementById('rest-timer-count');
-  _restRem=secs;
-  cnt.textContent=_restRem+'s';
-  el.className='rest-timer';
-  _restInterval=setInterval(()=>{
-    _restRem--;
-    if(_restRem<=0){
-      clearInterval(_restInterval);_restInterval=null;
-      cnt.textContent='Pronto!';
-      el.classList.add('done');
-      if(navigator.vibrate)navigator.vibrate([200,100,200]);
-      const ac=getAudioCtx();
-      if(ac){
-        try{
-          [0,300,600].forEach(delay=>{
-            const o=ac.createOscillator(),g=ac.createGain();
-            o.connect(g);g.connect(ac.destination);
-            o.frequency.value=880;g.gain.value=0.35;
-            const t=ac.currentTime+delay/1000;
-            o.start(t);o.stop(t+0.18);
-          });
-        }catch(e){}
-      }
-      if(Notification && Notification.permission==='granted'){
-        try{
-          const n=new Notification('Descanso concluído! ✓',{
-            body:'Hora do próximo exercício 💪',
-            icon:'/slo_laranja@2x.png',
-            vibrate:[200,100,200],
-            tag:'slo-timer',
-            renotify:true,
-            silent:false
-          });
-          setTimeout(()=>n.close(),4000);
-        }catch(e){}
-      }
-      setTimeout(cancelTimer,3000);
-    }else{
-      cnt.textContent=_restRem+'s';
-    }
-  },1000);
-}
-
-function cancelTimer(){
-  clearInterval(_restInterval);_restInterval=null;
-  document.getElementById('rest-timer').className='rest-timer hidden';
-  if(_wakeLock){_wakeLock.release();_wakeLock=null;}
-}
-
-function adjTimer(delta){
-  _restRem=Math.max(0,_restRem+delta);
-  document.getElementById('rest-timer-count').textContent=_restRem+'s';
-}
 
 function adjRestLog(d){
   _restSecs=Math.max(0,_restSecs+d);
@@ -1420,7 +1343,6 @@ function saveLog(e){
     toast('Registro atualizado! ✓','ok');
   }else{
     DB.saveLog(data);
-    startRestTimer(_restSecs);
     toast('Registrado! 💪','ok');
   }
   _editingLogId=null;
