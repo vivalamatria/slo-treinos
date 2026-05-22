@@ -183,6 +183,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:1
 .empty-text{font-size:13px;line-height:1.6}
 
 /* ── PROGRESS CARDS ──────────────────────────── */
+.prog-tabs{display:flex;border-bottom:2px solid var(--line);margin-bottom:16px}
+.prog-tab{background:none;border:none;padding:10px 16px;font-size:14px;font-weight:600;color:var(--ink-4);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.prog-tab.on{color:var(--amber-dark);border-bottom-color:var(--amber)}
+.prog-period{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.prog-period .mode-pill{font-size:12px;padding:5px 12px}
 .prog-card{background:var(--white);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:16px;margin-bottom:10px}
 .prog-name{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:12px}
 .prog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -1413,43 +1418,95 @@ function drawBars(values){
 
 function renderProgress(){
   const container=document.getElementById('progress-content');
-  const logs=DB.getLogs();
-  if(!logs.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Sem dados ainda</div><div class="empty-text">Registre seus treinos para<br>acompanhar a evolução.</div></div>`;
-    return;
-  }
+  const allLogs=DB.getLogs();
+  const filtered=filterLogsByPeriod(allLogs,_progressPeriod);
+
+  const periodHtml=`<div class="prog-period">${[['week','Semana'],['month','Mês'],['3months','3 Meses'],['year','Ano']].map(([k,l])=>`<button class="mode-pill${_progressPeriod===k?' on':''}" onclick="_progressPeriod='${k}';renderProgress()">${l}</button>`).join('')}</div>`;
+
+  const tabsHtml=`<div class="prog-tabs"><button class="prog-tab${_progressTab==='muscle'?' on':''}" onclick="_progressTab='muscle';renderProgress()">Musculação</button><button class="prog-tab${_progressTab==='activity'?' on':''}" onclick="_progressTab='activity';renderProgress()">Atividades</button></div>`;
+
+  container.innerHTML=periodHtml+tabsHtml+'<div id="prog-body"></div>';
+
+  if(_progressTab==='muscle')renderProgressMuscle(filtered);
+  else renderProgressActivity(filtered);
+}
+
+function renderProgressMuscle(logs){
+  const body=document.getElementById('prog-body');
   const exercises=DB.getExercises();
   const byEx={};
-  logs.forEach(l=>{
+  logs.filter(l=>!String(l.exercise_id).startsWith('activity_')).forEach(l=>{
     if(!byEx[l.exercise_id])byEx[l.exercise_id]=[];
     byEx[l.exercise_id].push(l);
   });
-
   const cards=Object.entries(byEx).map(([exId,exLogs])=>{
     const ex=exercises.find(e=>e.id===exId);
     const name=ex?ex.name:'Exercício';
     exLogs.sort((a,b)=>a.date-b.date);
-    const first=exLogs[0];
-    const last=exLogs[exLogs.length-1];
+    const first=exLogs[0],last=exLogs[exLogs.length-1];
     const gain=last.weight-first.weight;
     const pct=first.weight>0?((gain/first.weight)*100).toFixed(1):null;
-    const maxW=Math.max(...exLogs.map(l=>l.weight));
-    const barPct=maxW>0?Math.round((last.weight/maxW)*100):100;
     const lastDate=new Date(last.date).toLocaleDateString('pt-BR');
+    const sparkValues=exLogs.map(l=>l.weight);
     return`<div class="prog-card">
       <div class="prog-name">${esc(name)}</div>
       <div class="prog-grid">
         <div class="prog-stat"><div class="prog-stat-lbl">Inicial</div><div class="prog-stat-val">${first.weight}kg</div></div>
         <div class="prog-stat"><div class="prog-stat-lbl">Atual</div><div class="prog-stat-val">${last.weight}kg</div></div>
-        <div class="prog-stat"><div class="prog-stat-lbl">Ganho</div><div class="prog-stat-val ${gain>0?'up':gain<0?'':''}">${gain>=0?'+':''}${gain.toFixed(1)}kg</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Ganho</div><div class="prog-stat-val ${gain>0?'up':''}">${gain>=0?'+':''}${gain.toFixed(1)}kg</div></div>
         <div class="prog-stat"><div class="prog-stat-lbl">%</div><div class="prog-stat-val ${gain>0?'up':'neutral'}">${pct!==null?(gain>=0?'+':'')+pct+'%':'—'}</div></div>
       </div>
-      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${barPct}%"></div></div>
+      <div style="margin:10px 0 4px">${drawSparkline(sparkValues)}</div>
       <div class="prog-sessions">${exLogs.length} sessão${exLogs.length!==1?'ões':''} registrada${exLogs.length!==1?'s':''}</div>
       <div class="prog-last">Último registro: ${lastDate}</div>
     </div>`;
   }).join('');
-  container.innerHTML=cards||`<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Sem dados</div></div>`;
+  body.innerHTML=cards||`<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Sem registros no período</div></div>`;
+}
+
+function renderProgressActivity(logs){
+  const body=document.getElementById('prog-body');
+  const actLogs=logs.filter(l=>String(l.exercise_id).startsWith('activity_'));
+  if(!actLogs.length){
+    body.innerHTML=`<div class="empty"><div class="empty-icon">🏃</div><div class="empty-title">Sem atividades no período</div></div>`;
+    return;
+  }
+  const byType={};
+  actLogs.forEach(l=>{
+    const t=l.exercise_id.replace('activity_','');
+    if(!byType[t])byType[t]=[];
+    byType[t].push(l);
+  });
+  const ACT_ICONS={caminhada:'🚶',natacao:'🏊',pedal:'🚴',corrida:'🏃',outro:'⚡'};
+  const ACT_NAMES={caminhada:'Caminhada',natacao:'Natação',pedal:'Pedal',corrida:'Corrida',outro:'Outro'};
+  const cards=Object.entries(byType).map(([type,tLogs])=>{
+    tLogs.sort((a,b)=>a.date-b.date);
+    const icon=ACT_ICONS[type]||'⚡';
+    const name=ACT_NAMES[type]||type;
+    const distTypes=['caminhada','pedal','corrida'];
+    const useDistance=distTypes.includes(type);
+    const values=tLogs.map(l=>{
+      if(useDistance&&l.activity_data&&l.activity_data.fields&&l.activity_data.fields.distance)
+        return parseFloat(l.activity_data.fields.distance)||0;
+      return parseFloat(l.reps_completed)||0;
+    });
+    const metricLabel=useDistance?'km':'min';
+    const best=Math.max(...values);
+    const last=values[values.length-1];
+    const lastDate=new Date(tLogs[tLogs.length-1].date).toLocaleDateString('pt-BR');
+    return`<div class="prog-card">
+      <div class="prog-name">${icon} ${esc(name)}</div>
+      <div class="prog-grid">
+        <div class="prog-stat"><div class="prog-stat-lbl">Sessões</div><div class="prog-stat-val">${tLogs.length}</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Melhor</div><div class="prog-stat-val">${best>0?best+metricLabel:'—'}</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Último</div><div class="prog-stat-val">${last>0?last+metricLabel:'—'}</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Data</div><div class="prog-stat-val" style="font-size:11px">${lastDate}</div></div>
+      </div>
+      <div style="margin:10px 0 4px">${drawBars(values)}</div>
+      <div class="prog-last">Última atividade: ${lastDate}</div>
+    </div>`;
+  }).join('');
+  body.innerHTML=cards;
 }
 
 // ═══════════════════════════════════════════════
