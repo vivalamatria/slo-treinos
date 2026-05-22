@@ -447,7 +447,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
         <div class="fg"><label class="lbl">Séries</label><input id="ex-sets" class="inp" required placeholder="3" value="3"></div>
         <div class="fg"><label class="lbl">Repetições</label><input id="ex-reps" class="inp" required placeholder="8-12"></div>
       </div>
-      <div class="fg"><label class="lbl">Descanso</label><input id="ex-rest" class="inp" placeholder="90s"></div>
+      <div class="fg"><label class="lbl">Descanso</label><input id="ex-rest" class="inp" placeholder="90 ou 90s"></div>
       <div class="fg"><label class="lbl">Observações</label><textarea id="ex-notes" class="inp" placeholder="Técnica, variações, dicas…"></textarea></div>
       <div class="fg" id="multi-day-section" style="display:none">
         <label class="lbl">Adicionar também em</label>
@@ -1237,8 +1237,9 @@ function startInlineTimer(secs){
 
 function parseRestSecs(str){
   if(!str)return 90;
-  const m=str.match(/(\d+)\s*(min|m|s)/i);
+  const m=str.match(/(\d+)\s*(min|m|s)?/i);
   if(!m)return 90;
+  if(!m[2])return parseInt(m[1]);
   return m[2][0].toLowerCase()==='m'?parseInt(m[1])*60:parseInt(m[1]);
 }
 
