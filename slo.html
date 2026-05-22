@@ -1457,7 +1457,7 @@ function renderProgressMuscle(logs){
         <div class="prog-stat"><div class="prog-stat-lbl">%</div><div class="prog-stat-val ${gain>0?'up':'neutral'}">${pct!==null?(gain>=0?'+':'')+pct+'%':'—'}</div></div>
       </div>
       <div style="margin:10px 0 4px">${drawSparkline(sparkValues)}</div>
-      <div class="prog-sessions">${exLogs.length} sessão${exLogs.length!==1?'ões':''} registrada${exLogs.length!==1?'s':''}</div>
+      <div class="prog-sessions">${exLogs.length} sess${exLogs.length!==1?'ões':'ão'} registrada${exLogs.length!==1?'s':''}</div>
       <div class="prog-last">Último registro: ${lastDate}</div>
     </div>`;
   }).join('');
@@ -1477,8 +1477,8 @@ function renderProgressActivity(logs){
     if(!byType[t])byType[t]=[];
     byType[t].push(l);
   });
-  const ACT_ICONS={caminhada:'🚶',natacao:'🏊',pedal:'🚴',corrida:'🏃',outro:'⚡'};
-  const ACT_NAMES={caminhada:'Caminhada',natacao:'Natação',pedal:'Pedal',corrida:'Corrida',outro:'Outro'};
+  const ACT_ICONS={caminhada:'🚶',corrida:'🏃',pedal:'🚴',natacao:'🏊',pilates:'🏋️',alongamento:'🤸',meditacao:'🧘',escada:'🪜'};
+  const ACT_NAMES={caminhada:'Caminhada',corrida:'Corrida',pedal:'Pedal',natacao:'Natação',pilates:'Pilates',alongamento:'Alongamento',meditacao:'Meditação',escada:'Escada'};
   const cards=Object.entries(byType).map(([type,tLogs])=>{
     tLogs.sort((a,b)=>a.date-b.date);
     const icon=ACT_ICONS[type]||'⚡';
