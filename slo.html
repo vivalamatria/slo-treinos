@@ -831,11 +831,11 @@ function renderTodayWidget(){
     return;
   }
   const exCount=DB.getExercises().filter(e=>e.workout_id===todayWk.id).length;
-  w.innerHTML=`<div class="today-card">
+  w.innerHTML=`<div class="today-card" onclick="goTo('workouts')" style="cursor:pointer" title="Ir para o treino de hoje">
     <div class="today-eyebrow">Hoje · ${todayName}</div>
     <div class="today-name">${esc(todayWk.name)}</div>
     <div class="today-focus">${esc(todayWk.focus||'')}</div>
-    <span class="today-chip">${exCount} exercícios</span>
+    <span class="today-chip">${exCount} exercícios →</span>
   </div>`;
 }
 
