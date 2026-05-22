@@ -1006,7 +1006,10 @@ function renderWkCard(wk,exercises){
           const loggedToday=exLogs.some(l=>new Date(l.date).toDateString()===todayStr);
           return`<div class="ex-item" onclick="openLog('${ex.id}')" style="cursor:pointer">
             <div>
-              <div class="ex-name">${esc(ex.name)}</div>
+              <div class="ex-name" style="display:flex;align-items:center;gap:6px">
+                ${esc(ex.name)}
+                ${ex.equivalent_name?`<button class="ibtn" title="Trocar com ${esc(ex.equivalent_name)}" onclick="event.stopPropagation();swapEquivalent('${ex.id}')" style="width:22px;height:22px;flex-shrink:0;color:var(--ink-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></button>`:''}
+              </div>
               <div class="ex-spec">${esc(ex.sets)}× ${esc(ex.reps)}${ex.rest_time?' · '+esc(ex.rest_time):''}</div>
               ${ex.notes?`<div class="ex-note">${esc(ex.notes)}</div>`:''}
               ${lastLog?`<div class="ex-spec" style="color:var(--amber-dark);margin-top:2px">Último: ${lastLog.weight}kg · ${new Date(lastLog.date).toLocaleDateString('pt-BR')}</div>`:''}
@@ -1157,6 +1160,14 @@ function deleteEx(id){
   DB.deleteExercise(id);
   toast('Exercício excluído','warn');
   renderWorkouts();
+}
+
+function swapEquivalent(id){
+  const ex=DB.getExercises().find(e=>e.id===id);
+  if(!ex||!ex.equivalent_name)return;
+  DB.updateExercise(id,{name:ex.equivalent_name,equivalent_name:ex.name});
+  renderWorkouts();
+  toast('Trocado: '+esc(ex.equivalent_name),'ok');
 }
 
 // ═══════════════════════════════════════════════
