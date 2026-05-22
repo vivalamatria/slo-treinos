@@ -1242,8 +1242,7 @@ function startInlineTimer(secs){
       if(lbl)lbl.textContent='pode iniciar a próxima série';
       box.style.background='var(--green)';
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
-      const ac=getAudioCtx();
-      if(ac){try{[0,300,600].forEach(d=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.35;const t=ac.currentTime+d/1000;o.start(t);o.stop(t+0.18);});}catch(e){}}
+      playTimerSound();
       if(Notification&&Notification.permission==='granted'){try{const n=new Notification('Descanso concluído! ✓',{body:'Hora da próxima série 💪',icon:'/slo_laranja@2x.png',tag:'slo-timer',renotify:true,silent:false});setTimeout(()=>n.close(),4000);}catch(e){}}
       // mantém "Pronto!" visível — some ao iniciar próxima série ou ao salvar
     }else{
@@ -1267,6 +1266,11 @@ function getAudioCtx(){
     _audioCtx.resume().catch(()=>{});
   }
   return _audioCtx;
+}
+
+function playTimerSound(){
+  const ac=getAudioCtx();
+  if(ac){try{[0,300,600].forEach(d=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.35;const t=ac.currentTime+d/1000;o.start(t);o.stop(t+0.18);});}catch(e){}}
 }
 
 document.addEventListener('visibilitychange',()=>{
