@@ -326,7 +326,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
       <button class="import-btn" onclick="importB()">
         <div class="import-btn-icon" style="background:#EDE9FE">💪</div>
         <div class="import-btn-title">Mesociclo B</div>
-        <div class="import-btn-sub">Força · 6 sem · 4x</div>
+        <div class="import-btn-sub">Hipertrofia · 8 sem · 5x</div>
       </button>
     </div>
   </section>
@@ -569,91 +569,106 @@ const MESO_A = {
   weeks:8,freq:5,
   workouts:[
     {name:"Treino A",day:"Segunda",focus:"Peito + Tríceps + Manguito",exercises:[
-      {name:"Rotação Externa na Polia (manguito)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador — foco preventivo"},
-      {name:"Supino Reto na Máquina",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
-      {name:"Supino Inclinado na Máquina",sets:"3",reps:"8-12",rest:"90s",notes:""},
-      {name:"Crucifixo na Máquina ou Cabo",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Tríceps Corda na Polia",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Rotação Externa em pé na Polia",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador — foco preventivo"},
+      {name:"Supino Reto com Máquina",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Supino Inclinado com Máquina",sets:"3",reps:"8-12",rest:"90s",notes:""},
+      {name:"Crucifixo em máquina ou cabo",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Tríceps corda na polia",sets:"3",reps:"10-12",rest:"60s",notes:""},
       {name:"Tríceps Testa na Polia com Corda",sets:"2-3",reps:"8-12",rest:"60s",notes:""},
       {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]},
     {name:"Treino B",day:"Terça",focus:"Costas + Bíceps",exercises:[
-      {name:"Puxada Alta Frente (pegada média)",sets:"3-4",reps:"8-12",rest:"90s",notes:""},
-      {name:"Remada Curvada com Barra ou T-bar",sets:"3",reps:"6-10",rest:"90s",notes:""},
-      {name:"Remada Unilateral com Halter",sets:"3",reps:"8-12",rest:"60s",notes:"Cada lado"},
-      {name:"Pulldown com Corda (ou Pullover)",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Rosca Direta com Barra",sets:"3",reps:"8-12",rest:"60s",notes:""},
-      {name:"Rosca Martelo com Halteres",sets:"2-3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Puxada alta frente (pegada média/aberta)",sets:"3-4",reps:"8-12",rest:"90s",notes:""},
+      {name:"Remada curvada com barra ou T-bar",sets:"3",reps:"6-10",rest:"90s",notes:""},
+      {name:"Remada unilateral com halter",sets:"3",reps:"10-12",rest:"60s",notes:"Cada lado"},
+      {name:"Pulldown pegada neutra (triângulo)",sets:"2-3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Rosca direta com barra",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Rosca alternada com halteres",sets:"2-3",reps:"10-12",rest:"60s",notes:""},
       {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]},
-    {name:"Treino C",day:"Quarta",focus:"Pernas (Quad + Panturrilha) + Lombar",exercises:[
-      {name:"Agachamento Livre ou Smith",sets:"4",reps:"6-10",rest:"120s",notes:""},
-      {name:"Leg Press 45°",sets:"3",reps:"10-15",rest:"90s",notes:""},
-      {name:"Cadeira Extensora",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Hack Squat ou Búlgaro",sets:"3",reps:"8-12",rest:"90s",notes:"Cada perna"},
-      {name:"Panturrilha em Pé",sets:"4",reps:"12-20",rest:"45s",notes:""},
-      {name:"Levantamento Terra Romeno (lombar)",sets:"3",reps:"8-12",rest:"90s",notes:"Foco lombar"},
-      {name:"Hiperextensão Lombar",sets:"3",reps:"12-15",rest:"60s",notes:""}
+    {name:"Treino C",day:"Quarta",focus:"Pernas + Core + Lombar",exercises:[
+      {name:"Agachamento livre ou hack machine",sets:"4",reps:"6-10",rest:"120s",notes:""},
+      {name:"Leg press 45°",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Stiff / RDL com barra ou halteres",sets:"3",reps:"8-10",rest:"90s",notes:""},
+      {name:"Mesa flexora",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Cadeira extensora",sets:"2-3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Panturrilha em pé na máquina",sets:"4",reps:"12-20",rest:"45s",notes:""},
+      {name:"Extensão lombar (máquina ou banco romano)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Prancha",sets:"3",reps:"30-45s",rest:"45s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"30-45s",rest:"45s",notes:""}
     ]},
-    {name:"Treino D",day:"Quinta",focus:"Ombros + Trapézio + Manguito",exercises:[
-      {name:"Rotação Externa na Polia (manguito)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
-      {name:"Desenvolvimento com Halteres",sets:"4",reps:"8-12",rest:"90s",notes:""},
-      {name:"Elevação Lateral com Halteres",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Elevação Frontal Alternada",sets:"3",reps:"10-12",rest:"60s",notes:"Cada braço"},
-      {name:"Crucifixo Invertido (deltóide posterior)",sets:"3",reps:"12-15",rest:"60s",notes:""},
-      {name:"Encolhimento com Barra ou Halteres",sets:"3",reps:"10-15",rest:"60s",notes:"Trapézio"},
+    {name:"Treino D",day:"Quinta",focus:"Ombros + Manguito + Trapézio",exercises:[
+      {name:"Rotação externa com elástico/polia (cotovelo junto)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
+      {name:"Desenvolvimento com halteres ou máquina (sentado)",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Elevação lateral com halteres",sets:"3-4",reps:"10-15",rest:"60s",notes:""},
+      {name:"Crucifixo inverso (voador invertido)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Face pull (corda na polia alta)",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Encolhimento com barra ou halteres",sets:"3",reps:"10-12",rest:"60s",notes:"Trapézio"},
       {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]},
-    {name:"Treino E",day:"Sexta",focus:"Posterior + Glúteo + Panturrilha",exercises:[
-      {name:"Stiff (ou Terra Romeno)",sets:"4",reps:"8-12",rest:"90s",notes:""},
-      {name:"Cadeira Flexora",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Mesa Flexora (deitado)",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Hip Thrust (elevação pélvica)",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Abdução na Máquina ou Cabo",sets:"3",reps:"12-15",rest:"45s",notes:""},
-      {name:"Panturrilha Sentado",sets:"3",reps:"15-20",rest:"45s",notes:""},
+    {name:"Treino E",day:"Sexta",focus:"Full body leve + Manguito + Lombar + Core",exercises:[
+      {name:"Elevação no plano da escápula (full-can)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
+      {name:"Supino inclinado em máquina",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Remada baixa na polia",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Agachamento no Smith (sem passada)",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Good morning com barra leve",sets:"2-3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Panturrilha sentada",sets:"3-4",reps:"15-20",rest:"45s",notes:""},
+      {name:"Abdominal na polia ou máquina",sets:"3",reps:"12-15",rest:"45s",notes:""},
       {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]}
   ]
 };
 
 const MESO_B = {
-  name:"Mesociclo B — Força",
-  description:"6 semanas · 4x/semana · Força + Resistência Muscular",
-  weeks:6,freq:4,
+  name:"Mesociclo B — Hipertrofia",
+  description:"8 semanas · 5x/semana · Hipertrofia + Manguito + Lombar",
+  weeks:8,freq:5,
   workouts:[
-    {name:"Treino A",day:"Segunda",focus:"Peito + Ombros",exercises:[
-      {name:"Supino Reto com Barra",sets:"4",reps:"5-8",rest:"120s",notes:"Foco em força"},
-      {name:"Supino Inclinado com Halteres",sets:"3",reps:"8-10",rest:"90s",notes:""},
-      {name:"Crucifixo Inclinado",sets:"3",reps:"12-15",rest:"60s",notes:""},
-      {name:"Desenvolvimento Militar",sets:"4",reps:"6-10",rest:"90s",notes:""},
-      {name:"Elevação Lateral",sets:"3",reps:"12-15",rest:"60s",notes:""},
-      {name:"Elevação Frontal com Disco",sets:"2",reps:"12-15",rest:"60s",notes:""}
+    {name:"Treino A",day:"Segunda",focus:"Peito + Tríceps + Manguito",exercises:[
+      {name:"Rotação externa deitado de lado (halter leve)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador — foco preventivo"},
+      {name:"Supino reto com halteres",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Supino declinado com barra ou máquina",sets:"3",reps:"8-12",rest:"90s",notes:""},
+      {name:"Crossover na polia (alto-baixo)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Mergulho em paralelas ou banco",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Tríceps testa com halteres",sets:"2-3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]},
     {name:"Treino B",day:"Terça",focus:"Costas + Bíceps",exercises:[
-      {name:"Barra Fixa (ou Puxada)",sets:"4",reps:"6-10",rest:"90s",notes:"Foco em força"},
-      {name:"Remada Curvada",sets:"4",reps:"8-10",rest:"90s",notes:""},
-      {name:"Remada Cavalinho",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Pullover na Polia",sets:"3",reps:"12-15",rest:"60s",notes:""},
-      {name:"Rosca Direta",sets:"3",reps:"8-12",rest:"60s",notes:""},
-      {name:"Rosca Concentrada",sets:"3",reps:"10-12",rest:"60s",notes:""}
+      {name:"Barra fixa (livre ou assistida)",sets:"3-4",reps:"6-10",rest:"90s",notes:""},
+      {name:"Remada cavalinho (T-bar row)",sets:"3",reps:"6-10",rest:"90s",notes:""},
+      {name:"Pulldown pegada neutra",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Pullover na polia ou com halter",sets:"2-3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Rosca Scott (barra ou halteres)",sets:"3",reps:"8-12",rest:"60s",notes:""},
+      {name:"Rosca martelo",sets:"2-3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]},
-    {name:"Treino C",day:"Quinta",focus:"Pernas (Quad + Posterior)",exercises:[
-      {name:"Agachamento Livre",sets:"4",reps:"5-8",rest:"120s",notes:"Foco em força"},
-      {name:"Leg Press",sets:"3",reps:"10-12",rest:"90s",notes:""},
-      {name:"Cadeira Extensora",sets:"3",reps:"12-15",rest:"60s",notes:""},
-      {name:"Stiff",sets:"4",reps:"8-10",rest:"90s",notes:""},
-      {name:"Cadeira Flexora",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Panturrilha em Pé",sets:"4",reps:"15-20",rest:"60s",notes:""}
+    {name:"Treino C",day:"Quarta",focus:"Pernas + Core + Lombar",exercises:[
+      {name:"Front squat ou agachamento no Smith",sets:"4",reps:"6-10",rest:"120s",notes:""},
+      {name:"Leg press 45° (pés mais altos)",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Stiff com halteres",sets:"3",reps:"8-10",rest:"90s",notes:""},
+      {name:"Flexora unilateral",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Panturrilha no leg press",sets:"4",reps:"12-20",rest:"45s",notes:""},
+      {name:"Extensão lombar (máquina/banco romano)",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Prancha lateral",sets:"3",reps:"20-30s",rest:"45s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"30-45s",rest:"45s",notes:""}
     ]},
-    {name:"Treino D",day:"Sexta",focus:"Braços + Abdômen",exercises:[
-      {name:"Rosca Direta com Barra W",sets:"4",reps:"8-12",rest:"60s",notes:""},
-      {name:"Rosca Alternada",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Rosca Scott",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Tríceps Francês",sets:"4",reps:"8-12",rest:"60s",notes:""},
-      {name:"Tríceps Corda",sets:"3",reps:"10-12",rest:"60s",notes:""},
-      {name:"Tríceps Mergulho",sets:"3",reps:"10-15",rest:"60s",notes:""},
-      {name:"Prancha Isométrica",sets:"3",reps:"60s",rest:"45s",notes:"Tempo"},
-      {name:"Abdominal Canivete",sets:"3",reps:"15-20",rest:"45s",notes:""}
+    {name:"Treino D",day:"Quinta",focus:"Ombros + Manguito + Trapézio",exercises:[
+      {name:"Rotação externa com elástico cruzado",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
+      {name:"Desenvolvimento militar em pé (barra ou halteres)",sets:"3",reps:"6-10",rest:"90s",notes:""},
+      {name:"Elevação lateral na polia",sets:"3-4",reps:"10-15",rest:"60s",notes:""},
+      {name:"Y-raise em banco inclinado ou polia",sets:"3",reps:"10-15",rest:"60s",notes:""},
+      {name:"Face pull",sets:"3",reps:"12-15",rest:"60s",notes:""},
+      {name:"Encolhimento no Smith",sets:"3",reps:"10-12",rest:"60s",notes:"Trapézio"},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
+    ]},
+    {name:"Treino E",day:"Sexta",focus:"Full body leve + Manguito + Lombar + Core",exercises:[
+      {name:"Rotação externa a 90° de abdução (polia/halter leve)",sets:"3",reps:"15-20",rest:"60s",notes:"Manguito rotador"},
+      {name:"Supino em máquina (pegada neutra)",sets:"3",reps:"10-12",rest:"90s",notes:""},
+      {name:"Remada em máquina articulada",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Good morning com barra leve ou mesa flexora",sets:"3",reps:"10-12",rest:"60s",notes:""},
+      {name:"Panturrilha em pé unilateral",sets:"3",reps:"12-15",rest:"45s",notes:""},
+      {name:"Abdominal infra (suspenso ou no banco)",sets:"3",reps:"12-15",rest:"45s",notes:""},
+      {name:"Abdominal (a definir)",sets:"3",reps:"12-15",rest:"45s",notes:""}
     ]}
   ]
 };
@@ -916,13 +931,13 @@ function importMeso(data){
   return total;
 }
 function importA(){
-  if(!confirm(`Importar ${MESO_A.name}?\n35 exercícios em 5 treinos.`))return;
+  if(!confirm(`Importar ${MESO_A.name}?\n38 exercícios em 5 treinos.`))return;
   const n=importMeso(MESO_A);
   toast(`Mesociclo A importado — ${n} exercícios`,'ok');
   renderHome();
 }
 function importB(){
-  if(!confirm(`Importar ${MESO_B.name}?\n26 exercícios em 4 treinos.`))return;
+  if(!confirm(`Importar ${MESO_B.name}?\n36 exercícios em 5 treinos.`))return;
   const n=importMeso(MESO_B);
   toast(`Mesociclo B importado — ${n} exercícios`,'ok');
   renderHome();
