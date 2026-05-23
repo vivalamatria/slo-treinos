@@ -668,6 +668,7 @@ function get(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{r
 function set(key,val){localStorage.setItem(key,JSON.stringify(val))}
 function uid(){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)})}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function localDate(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 const DB={
   getMesos(){return get(K.m)},
@@ -1332,7 +1333,7 @@ function openLog(exId){
         :`<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>`}`;
   document.getElementById('btn-open-edit-ex').onclick = () => { closeSheet('sh-log'); openEditEx(exId); };
   document.getElementById('log-ex-id').value=exId;
-  document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('log-date').value=localDate();
   document.getElementById('log-notes').value='';
   document.getElementById('log-sheet-title').textContent='Registrar Execução';
   document.getElementById('log-submit-btn').textContent='Registrar';
@@ -1876,7 +1877,7 @@ function saveActivity(){
   const summary=_buildActSummary();
   DB.saveLog({
     exercise_id:'activity_'+_actState.id,
-    date:new Date(new Date().toISOString().split('T')[0]+'T12:00:00').getTime(),
+    date:new Date(localDate()+'T12:00:00').getTime(),
     weight:0,
     sets_completed:0,
     reps_completed:_actState.duration+'min',
@@ -1896,7 +1897,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Migrate activity logs with NaN dates (bug: toDateString() produced invalid ISO)
   (()=>{
     const logs=DB.getLogs();
-    const today=new Date(new Date().toISOString().split('T')[0]+'T12:00:00').getTime();
+    const today=new Date(localDate()+'T12:00:00').getTime();
     let fixed=false;
     logs.forEach(l=>{
       if(l.exercise_id&&l.exercise_id.startsWith('activity_')&&isNaN(l.date)){
@@ -1905,7 +1906,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
     if(fixed)set(K.logs,logs);
   })();
-  document.getElementById('meso-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('meso-start').value=localDate();
   renderHome();
   document.addEventListener('touchstart',()=>getAudioCtx(),{once:true,passive:true});
   document.addEventListener('click',()=>getAudioCtx(),{once:true});
