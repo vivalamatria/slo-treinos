@@ -1450,7 +1450,7 @@ function saveLog(e){
 // PROGRESSO
 // ═══════════════════════════════════════════════
 
-let _progressPeriod='month', _progressTab='muscle';
+let _progressPeriod='month', _progressTab='muscle', _actMetric={};
 
 function filterLogsByPeriod(logs,period){
   const now=new Date();
@@ -1477,32 +1477,32 @@ function drawSparkline(values){
   return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;overflow:visible"><path d="${line}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</svg>`;
 }
 
-function drawDualLine(timeVals,distVals){
-  const w=280,h=72,pad=6;
-  const n=timeVals.length;
-  if(!n)return'';
-  function line(vals,color){
-    if(vals.every(v=>v===0))return'';
-    const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
-    const pts=vals.map((v,i)=>{
-      const x=pad+(i/(Math.max(n-1,1)))*(w-2*pad);
-      const y=h-pad-((v-mn)/range)*(h-2*pad);
-      return[+x.toFixed(1),+y.toFixed(1)];
-    });
-    const d=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
-    const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${color}"/>`).join('');
-    return`<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/>${dots}`;
-  }
-  const hasTime=timeVals.some(v=>v>0);
-  const hasDist=distVals.some(v=>v>0);
+function drawAreaChart(values,dateLabels,gradId){
+  const w=280,h=100,padL=8,padR=44,padT=10,padB=20;
+  const plotW=w-padL-padR,plotH=h-padT-padB;
+  if(!values.length||values.every(v=>v===0))return`<div style="text-align:center;padding:16px;color:var(--ink-4);font-size:13px">Sem dados</div>`;
+  const mx=Math.max(...values,0.01);
+  const n=values.length;
+  const xp=i=>padL+(i/Math.max(n-1,1))*plotW;
+  const yp=v=>padT+plotH-(v/mx)*plotH;
+  const pts=values.map((v,i)=>[+xp(i).toFixed(1),+yp(v).toFixed(1)]);
+  const linePath=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  const areaPath=linePath+` L${pts[n-1][0]} ${(padT+plotH).toFixed(1)} L${padL} ${(padT+plotH).toFixed(1)} Z`;
+  const yTicks=[mx,mx/2,0].map(v=>({y:+yp(v).toFixed(1),lbl:v===0?'0':(v<10?v.toFixed(1):Math.round(v))+''}));
+  const step=Math.max(1,Math.ceil(n/4));
+  const shown=new Set([...Array.from({length:Math.ceil(n/step)+1},(_,i)=>i*step),n-1].filter(i=>i<n));
+  const xLabelsSvg=[...shown].map(i=>`<text x="${xp(i).toFixed(1)}" y="${(padT+plotH+13).toFixed(1)}" font-size="9" fill="var(--ink-4)" font-family="Inter,sans-serif" text-anchor="middle">${dateLabels[i]||''}</text>`).join('');
+  const yTicksSvg=yTicks.map(t=>`<text x="${(padL+plotW+5).toFixed(1)}" y="${(t.y+3).toFixed(1)}" font-size="9" fill="var(--ink-4)" font-family="Inter,sans-serif">${t.lbl}</text>`).join('');
+  const dots=pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${i===n-1?4:2.5}" fill="var(--amber)" stroke="var(--white)" stroke-width="${i===n-1?1.5:1}"/>`).join('');
   return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;overflow:visible">
-    ${hasTime?line(timeVals,'var(--blue)'):''}
-    ${hasDist?line(distVals,'var(--amber)'):''}
-  </svg>
-  <div style="display:flex;gap:14px;margin-top:4px;font-size:10px;font-weight:600;color:var(--ink-3)">
-    ${hasTime?`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--blue);border-radius:2px;display:inline-block"></span>Tempo (min)</span>`:''}
-    ${hasDist?`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--amber);border-radius:2px;display:inline-block"></span>Distância (km)</span>`:''}
-  </div>`;
+    <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--amber)" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="var(--amber)" stop-opacity="0.02"/>
+    </linearGradient></defs>
+    <path d="${areaPath}" fill="url(#${gradId})"/>
+    <path d="${linePath}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${yTicksSvg}${xLabelsSvg}
+  </svg>`;
 }
 
 function drawBars(values){
@@ -1588,40 +1588,76 @@ function renderProgressActivity(logs){
     const icon=ACT_ICONS[type]||'⚡';
     const name=ACT_NAMES[type]||type;
     const useDistance=distTypes.includes(type);
-    const timeVals=tLogs.map(l=>parseFloat(l.reps_completed)||0);
-    const distVals=tLogs.map(l=>{
-      if(!l.activity_data)return 0;
-      const f=l.activity_data.fields||{};
-      if(f.distance)return parseFloat(f.distance)||0;
-      const v=parseFloat(f.velocity)||0;
-      const dur=parseFloat(l.reps_completed)||0;
-      return v&&dur?parseFloat((v*dur/60).toFixed(2)):0;
-    });
-    const hasDistData=useDistance&&distVals.some(v=>v>0);
-    const bestTime=Math.max(...timeVals);
-    const bestDist=hasDistData?Math.max(...distVals):0;
-    const lastTime=timeVals[timeVals.length-1];
-    const lastDist=hasDistData?distVals[distVals.length-1]:0;
     const lastDate=new Date(tLogs[tLogs.length-1].date).toLocaleDateString('pt-BR');
-    const lastLog=tLogs[tLogs.length-1];
-    const avgVel=useDistance&&lastLog.activity_data?.fields?.velocity?lastLog.activity_data.fields.velocity+' km/h':null;
-    const avgInc=useDistance&&lastLog.activity_data?.fields?.incline!=null&&lastLog.activity_data.fields.incline!==''?lastLog.activity_data.fields.incline+'%':null;
-    const extraStats=(avgVel||avgInc)?`<div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--ink-3)">
-      ${avgVel?`<span>⚡ Vel. última: <strong style="color:var(--ink)">${esc(String(avgVel))}</strong></span>`:''}
-      ${avgInc?`<span>📐 Incl. última: <strong style="color:var(--ink)">${esc(String(avgInc))}</strong></span>`:''}
-    </div>`:'';
-    const chart=useDistance?drawDualLine(timeVals,distVals):drawBars(timeVals);
+    const dateLabels=tLogs.map(l=>{const d=new Date(l.date);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');});
+
+    if(useDistance){
+      const timeVals=tLogs.map(l=>parseFloat(l.reps_completed)||0);
+      const distVals=tLogs.map(l=>{
+        if(!l.activity_data)return 0;
+        const f=l.activity_data.fields||{};
+        if(f.distance)return parseFloat(f.distance)||0;
+        const v=parseFloat(f.velocity)||0,dur=parseFloat(l.reps_completed)||0;
+        return v&&dur?parseFloat((v*dur/60).toFixed(2)):0;
+      });
+      const velVals=tLogs.map(l=>{
+        if(!l.activity_data)return 0;
+        const f=l.activity_data.fields||{};
+        if(f.velocity)return parseFloat(f.velocity)||0;
+        const d=parseFloat(f.distance)||0,dur=parseFloat(l.reps_completed)||0;
+        return d&&dur?parseFloat((d/(dur/60)).toFixed(1)):0;
+      });
+      const hasDist=distVals.some(v=>v>0);
+      const hasVel=velVals.some(v=>v>0);
+      const metric=_actMetric[type]||(hasDist?'distance':'time');
+      const availMetrics=[
+        hasDist&&{id:'distance',lbl:'Distância'},
+        {id:'time',lbl:'Tempo'},
+        hasVel&&{id:'velocity',lbl:'Velocidade'},
+      ].filter(Boolean);
+      const tabsHtml=availMetrics.map(m=>`<button class="mode-pill${metric===m.id?' on':''}" onclick="_actMetric['${type}']='${m.id}';renderProgress()">${m.lbl}</button>`).join('');
+      let chartVals,totalLabel,totalVal;
+      if(metric==='distance'){
+        chartVals=distVals;
+        const tot=distVals.reduce((a,b)=>a+b,0);
+        totalLabel='Total Distância';
+        totalVal=tot>0?tot.toFixed(1)+' km':'—';
+      }else if(metric==='time'){
+        chartVals=timeVals;
+        const tot=timeVals.reduce((a,b)=>a+b,0);
+        totalLabel='Total Tempo';
+        totalVal=tot>0?tot+' min':'—';
+      }else{
+        chartVals=velVals;
+        const active=velVals.filter(v=>v>0);
+        const avg=active.length?parseFloat((active.reduce((a,b)=>a+b,0)/active.length).toFixed(1)):0;
+        totalLabel='Velocidade Média';
+        totalVal=avg>0?avg+' km/h':'—';
+      }
+      return`<div class="prog-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="prog-name" style="margin:0">${icon} ${esc(name)}</div>
+          <div style="font-size:12px;color:var(--ink-4)">${tLogs.length} sess${tLogs.length!==1?'ões':'ão'}</div>
+        </div>
+        <div class="mode-pills" style="margin-bottom:12px">${tabsHtml}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px">${totalLabel}</div>
+        <div style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-.04em;margin-bottom:12px">${totalVal}</div>
+        <div>${drawAreaChart(chartVals,dateLabels,'ag-${type}')}</div>
+        <div class="prog-last" style="margin-top:6px">Última atividade: ${lastDate}</div>
+      </div>`;
+    }
+
+    const timeVals=tLogs.map(l=>parseFloat(l.reps_completed)||0);
+    const bestTime=Math.max(...timeVals);
     return`<div class="prog-card">
       <div class="prog-name">${icon} ${esc(name)}</div>
       <div class="prog-grid">
         <div class="prog-stat"><div class="prog-stat-lbl">Sessões</div><div class="prog-stat-val">${tLogs.length}</div></div>
-        <div class="prog-stat"><div class="prog-stat-lbl">Melhor tempo</div><div class="prog-stat-val">${bestTime>0?bestTime+'min':'—'}</div></div>
-        ${hasDistData?`<div class="prog-stat"><div class="prog-stat-lbl">Melhor dist.</div><div class="prog-stat-val">${bestDist>0?bestDist+'km':'—'}</div></div>`:`<div class="prog-stat"><div class="prog-stat-lbl">Último</div><div class="prog-stat-val">${lastTime>0?lastTime+'min':'—'}</div></div>`}
+        <div class="prog-stat"><div class="prog-stat-lbl">Melhor</div><div class="prog-stat-val">${bestTime>0?bestTime+'min':'—'}</div></div>
+        <div class="prog-stat"><div class="prog-stat-lbl">Último</div><div class="prog-stat-val">${timeVals[timeVals.length-1]>0?timeVals[timeVals.length-1]+'min':'—'}</div></div>
         <div class="prog-stat"><div class="prog-stat-lbl">Data</div><div class="prog-stat-val" style="font-size:11px">${lastDate}</div></div>
       </div>
-      ${hasDistData?`<div style="margin:4px 0 0;font-size:12px;color:var(--ink-3)">Último: <strong style="color:var(--ink)">${lastTime}min</strong>${lastDist>0?' · <strong style="color:var(--ink)">'+lastDist+'km</strong>':''}</div>`:''}
-      ${extraStats}
-      <div style="margin:10px 0 4px">${chart}</div>
+      <div style="margin:10px 0 4px">${drawBars(timeVals)}</div>
       <div class="prog-last">Última atividade: ${lastDate}</div>
     </div>`;
   }).join('');
