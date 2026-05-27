@@ -1032,6 +1032,7 @@ function renderWkCard(wk,exercises){
   const logs=DB.getLogs();
   const todayStr=new Date().toDateString();
   const isActive=_activeWkId===wk.id;
+  const finishedToday=DB.getFinished()[wk.id]===todayStr;
   const wkExIds=new Set(exs.map(e=>e.id));
   const wkLogs=logs.filter(l=>wkExIds.has(l.exercise_id)).sort((a,b)=>b.date-a.date);
   const lastWkDate=wkLogs.length?new Date(wkLogs[0].date).toLocaleDateString('pt-BR'):null;
@@ -1074,8 +1075,11 @@ function renderWkCard(wk,exercises){
         ${isActive
           ?`<button class="btn ghost sm" onclick="clearLogsForWorkout('${wk.id}')">Limpar</button>
             <button class="btn primary sm" onclick="finishWorkout('${wk.id}')">Finalizar treino ✓</button>`
-          :`<button class="btn ghost sm" onclick="startWorkout('${wk.id}')">Iniciar treino</button>
-            <button class="btn primary sm" onclick="openAddEx('${wk.id}')">+ Exercício</button>`}
+          :finishedToday
+            ?`<button class="btn ghost sm" style="color:var(--green);border-color:var(--green)" onclick="startWorkout('${wk.id}')">Realizado hoje ✓</button>
+              <button class="btn primary sm" onclick="openAddEx('${wk.id}')">+ Exercício</button>`
+            :`<button class="btn ghost sm" onclick="startWorkout('${wk.id}')">Iniciar treino</button>
+              <button class="btn primary sm" onclick="openAddEx('${wk.id}')">+ Exercício</button>`}
       </div>
     </div>
   </div><div style="text-align:right;padding:2px 4px 10px">
@@ -1094,6 +1098,12 @@ function toggleWk(id){
 }
 
 function startWorkout(wkId){
+  const todayStr=new Date().toDateString();
+  const finished=DB.getFinished();
+  if(finished[wkId]===todayStr){
+    toast('Você já realizou este treino hoje 💪','ok');
+    return;
+  }
   _activeWkId=wkId;
   openCards.add(wkId);
   renderWorkouts();
