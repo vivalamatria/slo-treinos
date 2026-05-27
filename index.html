@@ -128,6 +128,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:1
 .cal-day.in{color:var(--ink-3)}
 .cal-day.trained{background:var(--amber-light);color:var(--amber-dark);font-weight:700}
 .cal-day.today{background:var(--amber);color:white;font-weight:800}
+.cal-day.blank-past{cursor:pointer;border:1px dashed transparent}
+.cal-day.blank-past:hover,.cal-day.blank-past:active{border-color:var(--amber);color:var(--amber-dark);background:var(--amber-light)}
 
 /* ── TODAY WIDGET ────────────────────────────── */
 .today-card{background:linear-gradient(135deg,var(--amber) 0%,var(--amber-dark) 100%);border-radius:var(--r);padding:20px;margin-bottom:20px;color:white;position:relative;overflow:hidden}
@@ -549,6 +551,16 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
   </div>
 </div>
 
+<div class="overlay" id="sh-retro" onclick="overlayClick(event,'sh-retro')">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title" id="sh-retro-title">Registrar para</span>
+      <button class="sheet-close" onclick="closeSheet('sh-retro')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sheet-body" id="sh-retro-body"></div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════
 // SEED DATA
@@ -782,10 +794,14 @@ function renderCalWidget(){
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   let cells='';
   for(let i=0;i<firstDow;i++)cells+=`<div class="cal-day"></div>`;
+  const todayTs=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
   for(let d=1;d<=daysInMonth;d++){
     const key=`${calYear}-${calMonth}-${d}`;
-    const cls=['cal-day','in',trained.has(key)?'trained':'',key===todayKey?'today':''].filter(Boolean).join(' ');
-    cells+=`<div class="${cls}">${d}</div>`;
+    const dayTs=new Date(calYear,calMonth,d).getTime();
+    const isPastBlank=dayTs<todayTs&&!trained.has(key);
+    const isoKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls=['cal-day','in',trained.has(key)?'trained':'',key===todayKey?'today':'',isPastBlank?'blank-past':''].filter(Boolean).join(' ');
+    cells+=`<div class="${cls}"${isPastBlank?` onclick="openRetroDay('${isoKey}')"`:''}>${d}</div>`;
   }
   document.getElementById('cal-widget').innerHTML=`<div class="cal">
     <div class="cal-hdr">
@@ -1381,7 +1397,7 @@ function openLog(exId){
         :`<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>`}`;
   document.getElementById('btn-open-edit-ex').onclick = () => { closeSheet('sh-log'); openEditEx(exId); };
   document.getElementById('log-ex-id').value=exId;
-  document.getElementById('log-date').value=localDate();
+  document.getElementById('log-date').value=_retroDate||localDate();_retroDate=null;
   document.getElementById('log-notes').value='';
   document.getElementById('log-sheet-title').textContent='Registrar Execução';
   document.getElementById('log-submit-btn').textContent='Registrar';
@@ -1814,6 +1830,24 @@ const ACT_SUBTYPE_MSGS={
 };
 
 let _actState={id:'',name:'',icon:'',duration:30,subtype:null,fields:{},multiFields:{},intensity:null};
+let _retroDate=null;
+
+function openRetroDay(dateStr){
+  _retroDate=dateStr;
+  const d=new Date(dateStr+'T12:00:00');
+  const label=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('sh-retro-title').textContent=label.charAt(0).toUpperCase()+label.slice(1);
+  const chips=ACTIVITIES.map(a=>
+    `<button class="activity-chip" onclick="closeSheet('sh-retro');quickLogActivity('${a.id}','${esc(a.name)}','${a.icon}')">${a.icon} ${a.name}</button>`
+  ).join('');
+  document.getElementById('sh-retro-body').innerHTML=`
+    <p style="font-size:13px;color:var(--ink-3);margin-bottom:14px">O que deseja registrar nesse dia?</p>
+    <div style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px">${chips}</div>
+    <div style="height:1px;background:var(--line);margin:4px 0 14px"></div>
+    <button class="btn ghost full" onclick="closeSheet('sh-retro');goTo('workouts')">🏋️ Registrar treino</button>
+  `;
+  openSheet('sh-retro');
+}
 
 function adjAct(d){
   _actState.duration=Math.max(5,_actState.duration+d);
@@ -1934,6 +1968,7 @@ function quickLogActivity(id,name,icon){
     </div>`;
 
   document.getElementById('act-form-body').innerHTML=html;
+  if(_retroDate){const el=document.getElementById('act-date');if(el)el.value=_retroDate;}
   openSheet('sh-activity');
 }
 
