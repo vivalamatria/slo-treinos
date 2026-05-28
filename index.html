@@ -495,7 +495,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
       </div>
       <form onsubmit="saveLog(event)">
         <input type="hidden" id="log-ex-id">
-        <div class="fg" style="margin-bottom:4px"><label class="lbl">Data</label><input type="date" id="log-date" class="inp"></div>
+        <div class="fg" style="margin-bottom:4px"><label class="lbl">Data</label><input type="date" id="log-date" class="inp" max=""></div>
         <div class="fg">
           <label class="lbl">Carga (kg)</label>
           <div class="stepper">
@@ -1407,7 +1407,7 @@ function openLog(exId){
         :`<div class="log-ctx-spec" style="margin-top:4px">Primeiro registro!</div>`}`;
   document.getElementById('btn-open-edit-ex').onclick = () => { closeSheet('sh-log'); openEditEx(exId); };
   document.getElementById('log-ex-id').value=exId;
-  document.getElementById('log-date').value=_retroDate||localDate();_retroDate=null;
+  const _ld=document.getElementById('log-date');_ld.value=_retroDate||localDate();_ld.max=localDate();_retroDate=null;
   document.getElementById('log-notes').value='';
   document.getElementById('log-sheet-title').textContent='Registrar Execução';
   document.getElementById('log-submit-btn').textContent='Registrar';
@@ -1643,7 +1643,19 @@ function renderProgressActivity(logs){
         <div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px">${totalLabel}</div>
         <div style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-.04em;margin-bottom:12px">${totalVal}</div>
         <div>${drawAreaChart(chartVals,dateLabels,'ag-${type}')}</div>
-        <div class="prog-last" style="margin-top:6px">Última atividade: ${lastDate}</div>
+        <div style="margin-top:10px">
+          ${tLogs.slice().reverse().map(l=>{
+            const ld=new Date(l.date).toLocaleDateString('pt-BR');
+            const dur=l.reps_completed||'—';
+            const f=l.activity_data?.fields||{};
+            const dist=f.distance?f.distance+'km':(f.velocity&&parseFloat(l.reps_completed))?parseFloat((parseFloat(f.velocity)*parseFloat(l.reps_completed)/60).toFixed(2))+'km':'';
+            return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:12px">
+              <span style="color:var(--ink-3);flex:1">${ld}</span>
+              <span style="color:var(--ink)">${dur}${dist?' · '+dist:''}</span>
+              <button onclick="deleteActivityLog('${l.id}')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;padding:2px 8px;font-size:18px;line-height:1;flex-shrink:0" title="Apagar">×</button>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`;
     }
 
@@ -1714,6 +1726,13 @@ function renderProfile(){
         <button class="btn danger full" style="font-size:13px" onclick="clearData()">Apagar todos os dados</button>
       </div>
     </div>`;
+}
+
+function deleteActivityLog(id){
+  if(!confirm('Apagar este registro?'))return;
+  DB.deleteLog(id);
+  toast('Registro apagado','warn');
+  renderProgress();
 }
 
 function clearData(){
@@ -2006,7 +2025,7 @@ function quickLogActivity(id,name,icon){
       </div></div>`;
   }
 
-  html+=`<div class="fg"><label class="lbl">Data</label><input type="date" id="act-date" class="inp" value="${localDate()}"></div>
+  html+=`<div class="fg"><label class="lbl">Data</label><input type="date" id="act-date" class="inp" value="${localDate()}" max="${localDate()}"></div>
     <div class="fg"><label class="lbl">Observações</label><textarea id="act-notes" class="inp" placeholder="Como foi?"></textarea></div>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button type="button" class="btn ghost full" onclick="closeSheet('sh-activity')">Cancelar</button>
@@ -2014,7 +2033,7 @@ function quickLogActivity(id,name,icon){
     </div>`;
 
   document.getElementById('act-form-body').innerHTML=html;
-  if(_retroDate){const el=document.getElementById('act-date');if(el)el.value=_retroDate;}
+  if(_retroDate){const el=document.getElementById('act-date');if(el)el.value=_retroDate;_retroDate=null;}
   openSheet('sh-activity');
 }
 
