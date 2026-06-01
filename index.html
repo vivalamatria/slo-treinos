@@ -743,6 +743,29 @@ function toast(msg,type=''){
 
 const SUBTITLES={};
 const DAY_PT=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const DAY_ORDER={};
+DAY_PT.forEach((d,i)=>DAY_ORDER[d]=i);
+
+function getNextWorkout(workouts){
+  if(!workouts.length)return null;
+  const sorted=[...workouts].sort((a,b)=>(DAY_ORDER[a.day_of_week]??9)-(DAY_ORDER[b.day_of_week]??9));
+  const finished=DB.getFinished();
+  // find the most recently finished workout among these
+  let lastIdx=-1;
+  let lastDate=0;
+  sorted.forEach((wk,i)=>{
+    if(finished[wk.id]){
+      const d=new Date(finished[wk.id]).getTime();
+      if(d>lastDate){lastDate=d;lastIdx=i;}
+    }
+  });
+  if(lastIdx===-1){
+    // nenhum feito ainda: usa o do dia atual
+    const todayName=DAY_PT[new Date().getDay()];
+    return sorted.find(wk=>wk.day_of_week===todayName)||sorted[0];
+  }
+  return sorted[(lastIdx+1)%sorted.length];
+}
 
 function goTo(sec){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
@@ -755,6 +778,22 @@ function goTo(sec){
   else if(sec==='workouts')renderWorkouts();
   else if(sec==='progress')renderProgress();
   else if(sec==='profile')renderProfile();
+}
+
+function goToWorkout(wkId){
+  openCards.add(wkId);
+  goTo('workouts');
+  setTimeout(()=>{
+    const el=document.getElementById('wkc-'+wkId);
+    const scrollEl=document.getElementById('scroll');
+    if(el&&scrollEl){
+      scrollEl.style.scrollBehavior='auto';
+      scrollEl.scrollTop=0;
+      const cardTop=el.getBoundingClientRect().top-scrollEl.getBoundingClientRect().top;
+      scrollEl.scrollTop=Math.max(0,cardTop-16);
+      scrollEl.style.scrollBehavior='';
+    }
+  },50);
 }
 
 // ═══════════════════════════════════════════════
@@ -863,8 +902,8 @@ function renderTodayWidget(){
     return;
   }
   const workouts=DB.getWorkouts().filter(wk=>wk.mesocycle_id===active.id);
-  const todayWk=workouts.find(wk=>wk.day_of_week===todayName);
-  if(!todayWk){
+  const nextWk=getNextWorkout(workouts);
+  if(!nextWk){
     w.innerHTML=`<div class="today-card" style="background:var(--surface);border:1px solid var(--line);box-shadow:none">
       <div class="today-eyebrow" style="color:var(--ink-4)">Hoje · ${todayName}</div>
       <div class="today-name" style="color:var(--ink)">Dia de descanso</div>
@@ -872,11 +911,13 @@ function renderTodayWidget(){
     </div>`;
     return;
   }
-  const exCount=DB.getExercises().filter(e=>e.workout_id===todayWk.id).length;
-  w.innerHTML=`<div class="today-card" onclick="goTo('workouts')" style="cursor:pointer" title="Ir para o treino de hoje">
-    <div class="today-eyebrow">Hoje · ${todayName}</div>
-    <div class="today-name">${esc(todayWk.name)}</div>
-    <div class="today-focus">${esc(todayWk.focus||'')}</div>
+  const isToday=nextWk.day_of_week===todayName;
+  const eyebrow=isToday?`Hoje · ${nextWk.day_of_week}`:`Próximo · ${nextWk.day_of_week}`;
+  const exCount=DB.getExercises().filter(e=>e.workout_id===nextWk.id).length;
+  w.innerHTML=`<div class="today-card" onclick="goToWorkout('${nextWk.id}')" style="cursor:pointer" title="Ir para o próximo treino">
+    <div class="today-eyebrow">${eyebrow}</div>
+    <div class="today-name">${esc(nextWk.name)}</div>
+    <div class="today-focus">${esc(nextWk.focus||'')}</div>
     <span class="today-chip">${exCount} exercícios →</span>
   </div>`;
 }
@@ -1017,13 +1058,15 @@ function renderWorkouts(){
   // restore previously open cards
   openCards.forEach(id=>{const el=document.getElementById('wkc-'+id);if(el)el.classList.add('open');});
 
-  // auto-expand today's workout in active mesocycle (first time only)
-  const todayName=DAY_PT[new Date().getDay()];
+  // auto-expand next workout in active mesocycle (first time only)
   const activeMeso=mesos.find(m=>m.status==='active');
   if(activeMeso){
-    filtered.filter(w=>w.mesocycle_id===activeMeso.id&&w.day_of_week===todayName).forEach(w=>{
-      if(!openCards.has(w.id)){const el=document.getElementById('wkc-'+w.id);if(el){el.classList.add('open');openCards.add(w.id);}}
-    });
+    const activeMesoWks=filtered.filter(w=>w.mesocycle_id===activeMeso.id);
+    const nextWk=getNextWorkout(activeMesoWks);
+    if(nextWk&&!openCards.has(nextWk.id)){
+      const el=document.getElementById('wkc-'+nextWk.id);
+      if(el){el.classList.add('open');openCards.add(nextWk.id);}
+    }
   }
 }
 
@@ -1383,6 +1426,14 @@ function openEditLog(logId){
 function openLog(exId){
   const ex=DB.getExercises().find(e=>e.id===exId);
   if(!ex)return;
+  // auto-start workout if none active and this workout not finished today
+  if(!_activeWkId){
+    const todayStr=new Date().toDateString();
+    if(DB.getFinished()[ex.workout_id]!==todayStr){
+      _activeWkId=ex.workout_id;
+      openCards.add(ex.workout_id);
+    }
+  }
   _editingLogId=null;
   _seriesChecked=new Set();
   clearInterval(_inlineInterval);_inlineInterval=null;
