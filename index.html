@@ -748,9 +748,9 @@ DAY_PT.forEach((d,i)=>DAY_ORDER[d]=i);
 
 function getNextWorkout(workouts){
   if(!workouts.length)return null;
-  const sorted=[...workouts].sort((a,b)=>(DAY_ORDER[a.day_of_week]??9)-(DAY_ORDER[b.day_of_week]??9));
+  // ordenar pela sequência do mesociclo (campo order, fallback created_at)
+  const sorted=[...workouts].sort((a,b)=>(a.order??a.created_at??0)-(b.order??b.created_at??0));
   const finished=DB.getFinished();
-  // find the most recently finished workout among these
   let lastIdx=-1;
   let lastDate=0;
   sorted.forEach((wk,i)=>{
@@ -759,11 +759,7 @@ function getNextWorkout(workouts){
       if(d>lastDate){lastDate=d;lastIdx=i;}
     }
   });
-  if(lastIdx===-1){
-    // nenhum feito ainda: usa o do dia atual
-    const todayName=DAY_PT[new Date().getDay()];
-    return sorted.find(wk=>wk.day_of_week===todayName)||sorted[0];
-  }
+  if(lastIdx===-1)return sorted[0];
   return sorted[(lastIdx+1)%sorted.length];
 }
 
@@ -911,11 +907,9 @@ function renderTodayWidget(){
     </div>`;
     return;
   }
-  const isToday=nextWk.day_of_week===todayName;
-  const eyebrow=isToday?`Hoje · ${nextWk.day_of_week}`:`Próximo · ${nextWk.day_of_week}`;
   const exCount=DB.getExercises().filter(e=>e.workout_id===nextWk.id).length;
   w.innerHTML=`<div class="today-card" onclick="goToWorkout('${nextWk.id}')" style="cursor:pointer" title="Ir para o próximo treino">
-    <div class="today-eyebrow">${eyebrow}</div>
+    <div class="today-eyebrow">Próximo treino</div>
     <div class="today-name">${esc(nextWk.name)}</div>
     <div class="today-focus">${esc(nextWk.focus||'')}</div>
     <span class="today-chip">${exCount} exercícios →</span>
@@ -1083,7 +1077,7 @@ function renderWkCard(wk,exercises){
     <div class="wk-card-hdr" onclick="toggleWk('${wk.id}')">
       <div class="wk-card-info">
         <div class="wk-card-title">${esc(wk.name)}</div>
-        <div class="wk-card-meta">${esc(wk.day_of_week||'')}${wk.focus?' · '+esc(wk.focus):''} · ${exs.length} exercícios${lastWkDate?' · Último: '+lastWkDate:''}</div>
+        <div class="wk-card-meta">${wk.focus?esc(wk.focus)+' · ':''}${exs.length} exercícios${lastWkDate?' · Último: '+lastWkDate:''}</div>
       </div>
       <div class="wk-card-toggle${isActive?' locked':''}"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
@@ -1225,7 +1219,7 @@ function openAddEx(workoutId){
     list.innerHTML=others.map(w=>
       `<label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" value="${w.id}" class="multi-day-cb">
-        <span>${esc(w.name)} · ${esc(w.day_of_week)}</span>
+        <span>${esc(w.name)}</span>
       </label>`
     ).join('');
     sec.style.display='';
